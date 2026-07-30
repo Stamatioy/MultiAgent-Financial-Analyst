@@ -8,6 +8,8 @@ from pydantic import BaseModel, ValidationError
 
 from financial_analyst.config import Settings, get_settings
 
+import time
+
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
@@ -86,70 +88,80 @@ class LocalLLMClient:
         response_model: type[SchemaT],
         temperature: float = 0.1,
         max_tokens: int = 1200,
+        max_attempts: int = 2,
     ) -> SchemaT:
         """
-        Generate JSON and validate it with a Pydantic model.
+        Generate schema-constrained JSON and validate it locally.
 
-        We validate application-side even when the server is asked to enforce
-        JSON. Model output must never be trusted without validation.
+        Each retry is a fresh request. We do not feed malformed model output back
+        into the prompt because doing so can reinforce incorrect content.
         """
 
+        if max_attempts < 1 or max_attempts > 3:
+            raise ValueError("max_attempts must be between 1 and 3.")
+
         schema = response_model.model_json_schema()
+        final_error: Exception | None = None
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.settings.llm_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt,
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.settings.llm_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": system_prompt,
+                        },
+                        {
+                            "role": "user",
+                            "content": user_prompt,
+                        },
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": response_model.__name__,
+                            "schema": schema,
+                            "strict": True,
+                        },
                     },
-                    {
-                        "role": "user",
-                        "content": user_prompt,
-                    },
-                ],
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response_format={
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": response_model.__name__,
-                        "schema": schema,
-                        "strict": True,
-                    },
-                },
-            )
-        except Exception as exc:
-            raise LocalLLMError(
-                f"Structured local model request failed: {exc}"
-            ) from exc
+                )
 
-        content = response.choices[0].message.content
+                content = response.choices[0].message.content
 
-        if not content:
-            raise LocalLLMError(
-                "The local model returned an empty structured response."
-            )
+                if not content:
+                    raise LocalLLMError(
+                        "The local model returned an empty response."
+                    )
 
-        cleaned_content = self._remove_markdown_fences(content)
+                cleaned_content = self._remove_markdown_fences(content)
 
-        try:
-            raw_data = json.loads(cleaned_content)
-        except json.JSONDecodeError as exc:
-            raise LocalLLMError(
-                "The model response was not valid JSON.\n\n"
-                f"Raw response:\n{content}"
-            ) from exc
+                raw_data = json.loads(cleaned_content)
 
-        try:
-            return response_model.model_validate(raw_data)
-        except ValidationError as exc:
-            raise LocalLLMError(
-                "The model returned JSON, but it did not match the schema.\n\n"
-                f"Validation error:\n{exc}\n\n"
-                f"Raw response:\n{content}"
-            ) from exc
+                return response_model.model_validate(raw_data)
+
+            except (
+                json.JSONDecodeError,
+                ValidationError,
+                LocalLLMError,
+            ) as exc:
+                final_error = exc
+
+                if attempt < max_attempts:
+                    time.sleep(0.25)
+                    continue
+
+            except Exception as exc:
+                raise LocalLLMError(
+                    f"Structured local model request failed: {exc}"
+                ) from exc
+
+        raise LocalLLMError(
+            "The local model failed to produce a valid structured response "
+            f"after {max_attempts} attempts. Last error: {final_error}"
+        ) from final_error
 
     @staticmethod
     def _remove_markdown_fences(content: str) -> str:

@@ -3,7 +3,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class StrictModel(BaseModel):
+    """Base model that rejects unspecified fields."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class MarketTrend(str, Enum):
@@ -13,7 +19,7 @@ class MarketTrend(str, Enum):
     INSUFFICIENT_DATA = "insufficient_data"
 
 
-class PriceRecord(BaseModel):
+class PriceRecord(StrictModel):
     ticker: str
     trading_date: date
     open: float
@@ -24,7 +30,7 @@ class PriceRecord(BaseModel):
     volume: int = Field(ge=0)
 
 
-class MarketMetrics(BaseModel):
+class MarketMetrics(StrictModel):
     ticker: str
     start_date: date
     end_date: date
@@ -53,7 +59,7 @@ class MarketMetrics(BaseModel):
     trend: MarketTrend
 
 
-class MarketAnalysisResult(BaseModel):
+class MarketAnalysisResult(StrictModel):
     ticker: str
     fetched_at: datetime
     source: str
