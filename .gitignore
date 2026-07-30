@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Models
+models/
+*.gguf
+*.safetensors
+
+# Local data
+data/
+*.duckdb
+*.db
+*.parquet
+
+# IDE
+.vscode/
+.idea/
+
+# Generated output
+outputs/
+logs/

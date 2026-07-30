@@ -1,0 +1,11 @@
+openai>=1.50
+pydantic>=2.8
+python-dotenv>=1.0
+httpx>=0.27
+yfinance>=0.2.65
+duckdb>=1.4
+pandas>=2.3
+numpy>=2.0
+
+[dev]
+pytest>=9.0
