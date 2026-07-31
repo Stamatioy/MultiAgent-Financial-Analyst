@@ -141,3 +141,51 @@ class NewsRepository:
         assert result is not None
 
         return int(result[0])
+
+    def get_recent_article_models(
+        self,
+        *,
+        ticker: str,
+        limit: int = 20,
+    ) -> list[NewsArticle]:
+        frame = self.get_recent_articles(
+            ticker=ticker,
+            limit=limit,
+        )
+
+        if frame.empty:
+            return []
+
+        articles: list[NewsArticle] = []
+
+        for row in frame.to_dict(
+            orient="records"
+        ):
+            articles.append(
+                NewsArticle.model_validate(row)
+            )
+
+        return articles
+
+    def get_article_models_as_of(
+        self,
+        *,
+        ticker: str,
+        as_of: datetime,
+        limit: int = 20,
+    ) -> list[NewsArticle]:
+        frame = self.get_articles_as_of(
+            ticker=ticker,
+            as_of=as_of,
+            limit=limit,
+        )
+
+        if frame.empty:
+            return []
+
+        return [
+            NewsArticle.model_validate(row)
+            for row in frame.to_dict(
+                orient="records"
+            )
+        ]
