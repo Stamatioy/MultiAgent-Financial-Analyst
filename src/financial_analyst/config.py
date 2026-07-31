@@ -19,6 +19,8 @@ class Settings:
     llm_model: str
     llm_timeout_seconds: float
     market_database_path: Path
+    sec_user_agent: str
+    sec_base_url: str
 
 
 def get_settings() -> Settings:
@@ -27,6 +29,7 @@ def get_settings() -> Settings:
     base_url = os.getenv("LLM_BASE_URL")
     api_key = os.getenv("LLM_API_KEY")
     model = os.getenv("LLM_MODEL")
+    sec_user_agent = os.getenv("SEC_USER_AGENT")
 
     if not base_url:
         raise RuntimeError("LLM_BASE_URL is missing from the environment.")
@@ -36,6 +39,17 @@ def get_settings() -> Settings:
 
     if not model:
         raise RuntimeError("LLM_MODEL is missing from the environment.")
+
+    if not sec_user_agent:
+        raise RuntimeError(
+            "SEC_USER_AGENT is missing. "
+            "Set it to an application name and contact email."
+        )
+
+    sec_base_url = os.getenv(
+    "SEC_BASE_URL",
+    "https://data.sec.gov",
+    )
 
     timeout_text = os.getenv("LLM_TIMEOUT_SECONDS", "180")
 
@@ -56,4 +70,7 @@ def get_settings() -> Settings:
         llm_model=model,
         llm_timeout_seconds=timeout_seconds,
         market_database_path=database_path,
+        sec_user_agent=sec_user_agent,
+        sec_base_url=sec_base_url.rstrip("/"),
+
     )
