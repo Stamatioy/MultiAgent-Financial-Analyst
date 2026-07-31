@@ -48,26 +48,51 @@ def select_annual_fact(
 
     subset = facts[
         (facts["concept"].isin(aliases))
-        & (facts["fiscal_year"] == fiscal_year)
         & (facts["form"] == "10-K")
         & (facts["unit"] == "USD")
+        & (facts["fiscal_period"] == "FY")
     ].copy()
 
     if subset.empty:
         return None
 
-    # Prefer FY contexts.
-    fy_rows = subset[
-        subset["fiscal_period"] == "FY"
+    subset["period_end"] = pd.to_datetime(
+        subset["period_end"],
+        errors="coerce",
+    )
+
+    subset["period_start"] = pd.to_datetime(
+        subset["period_start"],
+        errors="coerce",
+    )
+
+    subset["filing_date"] = pd.to_datetime(
+        subset["filing_date"],
+        errors="coerce",
+    )
+
+    subset = subset.dropna(
+        subset=[
+            "period_end",
+            "filing_date",
+        ]
+    )
+
+    # Critical:
+    # Select the fact whose ACTUAL reporting period ends
+    # in the requested fiscal year.
+    subset = subset[
+        subset["period_end"].dt.year
+        == fiscal_year
     ]
 
-    if not fy_rows.empty:
-        subset = fy_rows
+    if subset.empty:
+        return None
 
-    # Prefer alias order.
     alias_priority = {
         concept: index
-        for index, concept in enumerate(aliases)
+        for index, concept
+        in enumerate(aliases)
     }
 
     subset["concept_priority"] = (
@@ -76,16 +101,53 @@ def select_annual_fact(
         .fillna(999)
     )
 
-    # Later filings win so amended/restated values supersede old ones.
+    # Duration concepts such as revenue / income / cash flow
+    # should represent approximately one full fiscal year.
+    duration_rows = subset[
+        subset["period_start"].notna()
+    ].copy()
+
+    instant_rows = subset[
+        subset["period_start"].isna()
+    ].copy()
+
+    if not duration_rows.empty:
+        duration_rows["duration_days"] = (
+            duration_rows["period_end"]
+            - duration_rows["period_start"]
+        ).dt.days
+
+        annual_rows = duration_rows[
+            duration_rows["duration_days"].between(
+                300,
+                380,
+            )
+        ]
+
+        if not annual_rows.empty:
+            subset = annual_rows
+        else:
+            subset = duration_rows
+
+    elif not instant_rows.empty:
+        subset = instant_rows
+
+    # Prefer our best concept alias.
+    # For restated/amended values, prefer the latest filing.
     subset = subset.sort_values(
         by=[
             "concept_priority",
             "filing_date",
         ],
-        ascending=[True, False],
+        ascending=[
+            True,
+            False,
+        ],
     )
 
-    return float(subset.iloc[0]["value"])
+    return float(
+        subset.iloc[0]["value"]
+    )
 
 
 def calculate_fundamental_metrics(
@@ -140,6 +202,41 @@ def calculate_fundamental_metrics(
         facts,
         logical_name="stockholders_equity",
         fiscal_year=fiscal_year,
+    )
+
+    if (
+        liabilities is None
+        and assets is not None
+        and equity is not None
+    ):
+        liabilities = (
+            assets - equity
+        )
+
+    previous_assets = select_annual_fact(
+        facts,
+        logical_name="total_assets",
+        fiscal_year=fiscal_year - 1,
+    )
+
+    previous_equity = select_annual_fact(
+        facts,
+        logical_name="stockholders_equity",
+        fiscal_year=fiscal_year - 1,
+    )
+
+    average_assets = (
+        (assets + previous_assets) / 2
+        if assets is not None
+        and previous_assets is not None
+        else assets
+    )
+
+    average_equity = (
+        (equity + previous_equity) / 2
+        if equity is not None
+        and previous_equity is not None
+        else equity
     )
 
     cash = select_annual_fact(
@@ -207,12 +304,12 @@ def calculate_fundamental_metrics(
 
         return_on_assets=_safe_divide(
             net_income,
-            assets,
+            average_assets,
         ),
 
         return_on_equity=_safe_divide(
             net_income,
-            equity,
+            average_equity,
         ),
 
         liabilities_to_equity=_safe_divide(

@@ -82,3 +82,4 @@ def test_reject_invalid_materiality() -> None:
         NewsAgentOutput.model_validate(
             data
         )
+

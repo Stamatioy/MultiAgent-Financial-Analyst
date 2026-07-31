@@ -200,3 +200,4 @@ def test_corrects_wrong_event_count() -> None:
     )
 
     assert result.distinct_event_count == 1
+

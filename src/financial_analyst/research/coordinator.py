@@ -1,0 +1,280 @@
+from __future__ import annotations
+
+from datetime import date, datetime, timedelta, timezone
+
+from financial_analyst.agents.fundamental_agent import (
+    FundamentalAnalystAgent,
+)
+from financial_analyst.agents.market_agent import (
+    MarketAnalystAgent,
+)
+from financial_analyst.agents.news_agent import (
+    NewsAnalystAgent,
+)
+from financial_analyst.fundamentals.service import (
+    FundamentalDataService,
+)
+from financial_analyst.market_data.service import (
+    MarketDataService,
+)
+from financial_analyst.research.models import (
+    CompanyResearchBundle,
+    ResearchParameters,
+)
+from financial_analyst.retrieval.news_retriever import (
+    NewsRetriever,
+)
+from financial_analyst.validation.ticker import (
+    normalize_ticker,
+)
+
+class ResearchCoordinator:
+    """
+    Deterministically orchestrates specialist financial research branches.
+    """
+
+    def __init__(
+        self,
+        *,
+        market_service: MarketDataService,
+        market_agent: MarketAnalystAgent,
+        fundamental_service: FundamentalDataService,
+        fundamental_agent: FundamentalAnalystAgent,
+        news_retriever: NewsRetriever,
+        news_agent: NewsAnalystAgent,
+    ) -> None:
+        self.market_service = market_service
+        self.market_agent = market_agent
+
+        self.fundamental_service = (
+            fundamental_service
+        )
+
+        self.fundamental_agent = (
+            fundamental_agent
+        )
+
+        self.news_retriever = news_retriever
+        self.news_agent = news_agent
+
+    def research(
+        self,
+        *,
+        ticker: str,
+        fiscal_year: int,
+        market_years: int = 5,
+        news_query: str = (
+            "material company developments, earnings, "
+            "guidance, products, regulation and risks"
+        ),
+        news_limit: int = 15,
+        as_of: datetime | None = None,
+        refresh_market: bool = True,
+        refresh_fundamentals: bool = True,
+    ) -> CompanyResearchBundle:
+        normalized_ticker = normalize_ticker(
+            ticker
+        )
+
+        if (
+            as_of is not None
+            and as_of.tzinfo is None
+        ):
+            raise ValueError(
+                "as_of must be timezone-aware."
+            )
+
+        if market_years < 1 or market_years > 30:
+            raise ValueError(
+                "market_years must be between 1 and 30."
+            )
+
+        if news_limit < 1 or news_limit > 50:
+            raise ValueError(
+                "news_limit must be between 1 and 50."
+            )
+
+        query = news_query.strip()
+
+        if not query:
+            raise ValueError(
+                "news_query cannot be empty."
+            )
+
+        resolved_as_of = (
+            as_of
+            or datetime.now(timezone.utc)
+        )
+
+        market_end_date = (
+            resolved_as_of.date()
+        )
+
+        market_start_date = (
+            market_end_date
+            - timedelta(
+                days=round(
+                    market_years * 365.25
+                )
+            )
+        )
+
+        market_result = (
+            self.market_service.analyze(
+                ticker=normalized_ticker,
+                start_date=market_start_date,
+                end_date=market_end_date,
+                refresh=refresh_market,
+            )
+        )
+
+        market_analysis = (
+            self.market_agent.analyze(
+                market_result.metrics
+            )
+        )
+
+        fundamental_metrics = (
+            self.fundamental_service.analyze(
+                ticker=normalized_ticker,
+                fiscal_year=fiscal_year,
+                refresh=refresh_fundamentals,
+            )
+        )
+
+        fundamental_analysis = (
+            self.fundamental_agent.analyze(
+                fundamental_metrics
+            )
+        )
+
+        retrieved_news = (
+            self.news_retriever.retrieve(
+                query=query,
+                ticker=normalized_ticker,
+                limit=news_limit,
+                as_of=resolved_as_of,
+            )
+        )
+
+        if not retrieved_news:
+            raise RuntimeError(
+                "No relevant news articles were retrieved "
+                f"for {normalized_ticker}."
+            )
+
+        articles = [
+            result.article
+            for result in retrieved_news
+        ]
+
+        news_analysis = (
+            self.news_agent.analyze(
+                ticker=normalized_ticker,
+                articles=articles,
+            )
+        )
+
+        parameters = ResearchParameters(
+            ticker=normalized_ticker,
+            fiscal_year=fiscal_year,
+            market_years=market_years,
+            news_query=query,
+            news_limit=news_limit,
+            as_of=resolved_as_of,
+        )
+
+        bundle = CompanyResearchBundle(
+            ticker=normalized_ticker,
+            generated_at=datetime.now(
+                timezone.utc
+            ),
+            parameters=parameters,
+
+            market_metrics=(
+                market_result.metrics
+            ),
+
+            market_analysis=(
+                market_analysis
+            ),
+
+            fundamental_metrics=(
+                fundamental_metrics
+            ),
+
+            fundamental_analysis=(
+                fundamental_analysis
+            ),
+
+            retrieved_news=(
+                retrieved_news
+            ),
+
+            news_analysis=(
+                news_analysis
+            ),
+        )
+
+        self._validate_bundle(
+            bundle
+        )
+
+        return bundle
+
+    @staticmethod
+    def _validate_bundle(
+        bundle: CompanyResearchBundle,
+    ) -> None:
+        ticker = bundle.ticker
+
+        if (
+            bundle.market_metrics.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Market metrics ticker mismatch."
+            )
+
+        if (
+            bundle.market_analysis.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Market analysis ticker mismatch."
+            )
+
+        if (
+            bundle.fundamental_metrics.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Fundamental metrics ticker mismatch."
+            )
+
+        if (
+            bundle.fundamental_analysis.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Fundamental analysis ticker mismatch."
+            )
+
+        if (
+            bundle.news_analysis.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "News analysis ticker mismatch."
+            )
+
+        for retrieved in (
+            bundle.retrieved_news
+        ):
+            if (
+                retrieved.article.ticker
+                != ticker
+            ):
+                raise ValueError(
+                    "Retrieved news ticker mismatch."
+                )

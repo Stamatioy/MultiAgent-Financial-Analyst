@@ -39,6 +39,34 @@ STRICT RULES
 18. Return only the requested JSON.
 19. Do not output Markdown.
 20. Do not expose a thinking trace.
+21. regulation may only be used when the supplied article explicitly
+    concerns a law, regulator, government restriction, government policy,
+    regulatory approval, regulatory investigation, or similar regulatory
+    action.
+
+22. market_movement should be used when the central subject is movement in
+    the company's stock price without a distinct underlying corporate event.
+
+23. analyst_action should be used for analyst upgrades, downgrades,
+    recommendations, target-price changes or analyst commentary.
+
+24. competitive_development should be used when the central development
+    concerns competition with another company or competitive positioning.
+
+25. industry_development should be used for broader sector developments
+    that affect the company but are not company-specific actions.
+
+26. If the article contains explicit positive implications, populate
+    positive_factors.
+
+27. If the article contains explicit negative implications or risks,
+    populate negative_factors.
+
+28. If an important claim is speculative, conditional or unsupported by
+    detail in the supplied summary, populate uncertainties.
+
+29. Do not leave all three factor lists empty when the supplied article
+    explicitly contains positive, negative or uncertain implications.
 
 EVENT MATERIALITY
 

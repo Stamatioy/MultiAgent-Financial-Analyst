@@ -49,13 +49,28 @@ class EventType(str, Enum):
     ACQUISITION = "acquisition"
     DIVESTITURE = "divestiture"
     PARTNERSHIP = "partnership"
+
+    COMPETITIVE_DEVELOPMENT = (
+        "competitive_development"
+    )
+
+    INDUSTRY_DEVELOPMENT = (
+        "industry_development"
+    )
+
+    MARKET_MOVEMENT = (
+        "market_movement"
+    )
+
+    ANALYST_ACTION = "analyst_action"
+
     REGULATION = "regulation"
     LITIGATION = "litigation"
     FINANCING = "financing"
     MANAGEMENT = "management"
     OPERATIONS = "operations"
-    ANALYST_ACTION = "analyst_action"
     MACRO_EXPOSURE = "macro_exposure"
+
     OTHER = "other"
 
 
