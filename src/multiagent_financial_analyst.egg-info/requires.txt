@@ -6,6 +6,8 @@ yfinance>=0.2.65
 duckdb>=1.4
 pandas>=2.3
 numpy>=2.0
+sentence-transformers>=5.0
+faiss-cpu>=1.14
 
 [dev]
 pytest>=9.0

@@ -11,5 +11,7 @@ Requires-Dist: yfinance>=0.2.65
 Requires-Dist: duckdb>=1.4
 Requires-Dist: pandas>=2.3
 Requires-Dist: numpy>=2.0
+Requires-Dist: sentence-transformers>=5.0
+Requires-Dist: faiss-cpu>=1.14
 Provides-Extra: dev
 Requires-Dist: pytest>=9.0; extra == "dev"

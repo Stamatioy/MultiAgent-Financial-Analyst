@@ -164,7 +164,7 @@ def test_reject_unknown_article_reference() -> None:
         )
 
 
-def test_reject_wrong_article_count() -> None:
+def test_corrects_wrong_article_count() -> None:
     output = make_output().model_copy(
         update={
             "article_count": 20
@@ -175,20 +175,18 @@ def test_reject_wrong_article_count() -> None:
         llm_client=FakeLLMClient(output)
     )
 
-    with pytest.raises(
-        ValueError,
-        match="incorrect article_count",
-    ):
-        agent.analyze(
-            ticker="TEST",
-            articles=make_articles(),
-        )
+    result = agent.analyze(
+        ticker="TEST",
+        articles=make_articles(),
+    )
+
+    assert result.article_count == 2
 
 
-def test_reject_wrong_event_count() -> None:
+def test_corrects_wrong_event_count() -> None:
     output = make_output().model_copy(
         update={
-            "distinct_event_count": 3
+            "distinct_event_count": 999
         }
     )
 
@@ -196,11 +194,9 @@ def test_reject_wrong_event_count() -> None:
         llm_client=FakeLLMClient(output)
     )
 
-    with pytest.raises(
-        ValueError,
-        match="distinct_event_count",
-    ):
-        agent.analyze(
-            ticker="TEST",
-            articles=make_articles(),
-        )
+    result = agent.analyze(
+        ticker="TEST",
+        articles=make_articles(),
+    )
+
+    assert result.distinct_event_count == 1

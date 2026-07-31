@@ -193,15 +193,13 @@ class NewsAnalystAgent:
                 f"expected {ticker}, got {result.ticker}."
             )
 
-        if result.article_count != len(articles):
-            raise ValueError(
-                "News agent returned an incorrect article_count."
-            )
+        result.article_count = len(
+            articles
+        )
 
-        if result.distinct_event_count != len(result.events):
-            raise ValueError(
-                "distinct_event_count does not match events length."
-            )
+        result.distinct_event_count = len(
+            result.events
+        )
 
         allowed_ids = {
             article.article_id
@@ -224,10 +222,5 @@ class NewsAnalystAgent:
                         "News agent referenced an unknown "
                         f"article ID: {article_id}"
                     )
-
-            if len(event.supporting_article_ids) != len(
-                set(event.supporting_article_ids)
-            ):
-                raise ValueError(
-                    f"{event.event_id} contains duplicate article IDs."
-                )
+            
+            

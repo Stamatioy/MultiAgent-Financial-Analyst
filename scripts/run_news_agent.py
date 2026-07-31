@@ -20,6 +20,15 @@ from financial_analyst.validation.ticker import (
     normalize_ticker,
 )
 
+from financial_analyst.retrieval.embedding import (
+    EmbeddingService,
+)
+from financial_analyst.retrieval.news_index import (
+    NewsVectorIndex,
+)
+from financial_analyst.retrieval.news_retriever import (
+    NewsRetriever,
+)
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -61,6 +70,16 @@ def parse_arguments() -> argparse.Namespace:
         "--show-articles",
         action="store_true",
         help="Print article metadata before the analysis.",
+    )
+
+    parser.add_argument(
+        "--query",
+        type=str,
+        default=None,
+        help=(
+            "Semantic retrieval query. "
+            "If omitted, recent cached news is used."
+        ),
     )
 
     return parser.parse_args()
@@ -123,21 +142,48 @@ def main() -> None:
                 limit=args.limit,
             )
 
-        if as_of is None:
-            articles = (
-                repository.get_recent_article_models(
-                    ticker=ticker,
-                    limit=args.limit,
-                )
+        if args.query:
+            embedding_service = EmbeddingService()
+
+            vector_index = NewsVectorIndex(
+                embedding_service=embedding_service
             )
+
+            vector_index.load()
+
+            retriever = NewsRetriever(
+                vector_index=vector_index,
+                repository=repository,
+            )
+
+            retrieved = retriever.retrieve(
+                query=args.query,
+                ticker=ticker,
+                limit=args.limit,
+                as_of=as_of,
+            )
+
+            articles = [
+                result.article
+                for result in retrieved
+            ]
+
         else:
-            articles = (
-                repository.get_article_models_as_of(
-                    ticker=ticker,
-                    as_of=as_of,
-                    limit=args.limit,
+            if as_of is None:
+                articles = (
+                    repository.get_recent_article_models(
+                        ticker=ticker,
+                        limit=args.limit,
+                    )
                 )
-            )
+            else:
+                articles = (
+                    repository.get_article_models_as_of(
+                        ticker=ticker,
+                        as_of=as_of,
+                        limit=args.limit,
+                    )
+                )
 
         if not articles:
             raise RuntimeError(

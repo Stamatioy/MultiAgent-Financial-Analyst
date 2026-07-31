@@ -189,3 +189,74 @@ class NewsRepository:
                 orient="records"
             )
         ]
+
+    def get_all_article_models(
+        self,
+    ) -> list[NewsArticle]:
+        frame = self.connection.execute(
+            """
+            SELECT
+                article_id,
+                ticker,
+                title,
+                summary,
+                publisher,
+                url,
+                published_at,
+                source,
+                fetched_at
+            FROM news_articles
+            ORDER BY
+                published_at ASC NULLS LAST,
+                article_id
+            """
+        ).fetchdf()
+
+        if frame.empty:
+            return []
+
+        return [
+            NewsArticle.model_validate(row)
+            for row in frame.to_dict(
+                orient="records"
+            )
+        ]
+
+    def get_articles_by_ids(
+        self,
+        article_ids: list[str],
+    ) -> dict[str, NewsArticle]:
+        if not article_ids:
+            return {}
+
+        placeholders = ", ".join(
+            ["?"] * len(article_ids)
+        )
+
+        frame = self.connection.execute(
+            f"""
+            SELECT
+                article_id,
+                ticker,
+                title,
+                summary,
+                publisher,
+                url,
+                published_at,
+                source,
+                fetched_at
+            FROM news_articles
+            WHERE article_id IN ({placeholders})
+            """,
+            article_ids,
+        ).fetchdf()
+
+        return {
+            article.article_id: article
+            for article in (
+                NewsArticle.model_validate(row)
+                for row in frame.to_dict(
+                    orient="records"
+                )
+            )
+        }

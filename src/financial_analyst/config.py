@@ -21,6 +21,9 @@ class Settings:
     market_database_path: Path
     sec_user_agent: str
     sec_base_url: str
+    embedding_model: str
+    news_faiss_index_path: Path
+    news_faiss_metadata_path: Path
 
 
 def get_settings() -> Settings:
@@ -30,6 +33,25 @@ def get_settings() -> Settings:
     api_key = os.getenv("LLM_API_KEY")
     model = os.getenv("LLM_MODEL")
     sec_user_agent = os.getenv("SEC_USER_AGENT")
+
+    embedding_model = os.getenv(
+    "EMBEDDING_MODEL",
+    "sentence-transformers/all-MiniLM-L6-v2",
+    )
+
+    news_faiss_index_path = Path(
+        os.getenv(
+            "NEWS_FAISS_INDEX_PATH",
+            "data/vectors/news.faiss",
+        )
+    )
+
+    news_faiss_metadata_path = Path(
+        os.getenv(
+            "NEWS_FAISS_METADATA_PATH",
+            "data/vectors/news_metadata.json",
+        )
+    )
 
     if not base_url:
         raise RuntimeError("LLM_BASE_URL is missing from the environment.")
@@ -72,5 +94,8 @@ def get_settings() -> Settings:
         market_database_path=database_path,
         sec_user_agent=sec_user_agent,
         sec_base_url=sec_base_url.rstrip("/"),
+        embedding_model=embedding_model,
+        news_faiss_index_path=news_faiss_index_path,
+        news_faiss_metadata_path=news_faiss_metadata_path,
 
     )
