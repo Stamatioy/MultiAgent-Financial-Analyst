@@ -42,4 +42,18 @@ CONCEPT_ALIASES: dict[str, list[str]] = {
     "capital_expenditures": [
         "PaymentsToAcquirePropertyPlantAndEquipment",
     ],
+    "shares_outstanding": [
+    "CommonStockSharesOutstanding",
+    ],
+    "long_term_debt": [
+        "LongTermDebtAndFinanceLeaseObligationsCurrent",
+        "LongTermDebtCurrent",
+        "ShortTermBorrowings",
+    ],
+
+    "long_term_debt_noncurrent": [
+        "LongTermDebtAndFinanceLeaseObligationsNoncurrent",
+        "LongTermDebtNoncurrent",
+        "LongTermDebtAndCapitalLeaseObligations",
+    ],
 }

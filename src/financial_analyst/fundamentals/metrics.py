@@ -43,13 +43,14 @@ def select_annual_fact(
     *,
     logical_name: str,
     fiscal_year: int,
+    unit: str = "USD",
 ) -> float | None:
     aliases = CONCEPT_ALIASES[logical_name]
 
     subset = facts[
         (facts["concept"].isin(aliases))
         & (facts["form"] == "10-K")
-        & (facts["unit"] == "USD")
+        & (facts["unit"] == unit)
         & (facts["fiscal_period"] == "FY")
     ].copy()
 
@@ -149,6 +150,88 @@ def select_annual_fact(
         subset.iloc[0]["value"]
     )
 
+def select_instant_fact(
+    facts: pd.DataFrame,
+    *,
+    logical_name: str,
+    fiscal_year: int,
+    unit: str,
+) -> float | None:
+    aliases = CONCEPT_ALIASES[logical_name]
+
+    subset = facts[
+        (facts["concept"].isin(aliases))
+        & (facts["form"] == "10-K")
+        & (facts["unit"] == unit)
+        & (facts["fiscal_period"] == "FY")
+    ].copy()
+
+    if subset.empty:
+        return None
+
+    subset["period_end"] = pd.to_datetime(
+        subset["period_end"],
+        errors="coerce",
+    )
+
+    subset["period_start"] = pd.to_datetime(
+        subset["period_start"],
+        errors="coerce",
+    )
+
+    subset["filing_date"] = pd.to_datetime(
+        subset["filing_date"],
+        errors="coerce",
+    )
+
+    subset = subset.dropna(
+        subset=[
+            "period_end",
+            "filing_date",
+        ]
+    )
+
+    subset = subset[
+        subset["period_end"].dt.year
+        == fiscal_year
+    ]
+
+    if subset.empty:
+        return None
+
+    # Instant facts should have no start date.
+    instant_rows = subset[
+        subset["period_start"].isna()
+    ]
+
+    if not instant_rows.empty:
+        subset = instant_rows
+
+    alias_priority = {
+        concept: index
+        for index, concept in enumerate(aliases)
+    }
+
+    subset["concept_priority"] = (
+        subset["concept"]
+        .map(alias_priority)
+        .fillna(999)
+    )
+
+    subset = subset.sort_values(
+        by=[
+            "concept_priority",
+            "filing_date",
+        ],
+        ascending=[
+            True,
+            False,
+        ],
+    )
+
+    return float(
+        subset.iloc[0]["value"]
+    )
 
 def calculate_fundamental_metrics(
     *,
@@ -245,6 +328,42 @@ def calculate_fundamental_metrics(
         fiscal_year=fiscal_year,
     )
 
+    shares_outstanding = select_instant_fact(
+        facts,
+        logical_name="shares_outstanding",
+        fiscal_year=fiscal_year,
+        unit="shares",
+    )
+
+    current_debt = select_instant_fact(
+        facts,
+        logical_name="long_term_debt",
+        fiscal_year=fiscal_year,
+        unit="USD",
+    )
+
+    noncurrent_debt = select_instant_fact(
+        facts,
+        logical_name="long_term_debt_noncurrent",
+        fiscal_year=fiscal_year,
+        unit="USD",
+    )
+
+    debt_components = [
+        value
+        for value in (
+            current_debt,
+            noncurrent_debt,
+        )
+        if value is not None
+    ]
+
+    total_debt = (
+        sum(debt_components)
+        if debt_components
+        else None
+    )
+
     operating_cash_flow = select_annual_fact(
         facts,
         logical_name="operating_cash_flow",
@@ -277,6 +396,11 @@ def calculate_fundamental_metrics(
         stockholders_equity=equity,
 
         cash_and_equivalents=cash,
+        shares_outstanding=shares_outstanding,
+        
+        current_debt=current_debt,
+        noncurrent_debt=noncurrent_debt,
+        total_debt=total_debt,
 
         operating_cash_flow=operating_cash_flow,
         capital_expenditures=capex,
@@ -317,3 +441,4 @@ def calculate_fundamental_metrics(
             equity,
         ),
     )
+

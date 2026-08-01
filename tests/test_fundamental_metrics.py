@@ -208,6 +208,40 @@ def make_facts() -> pd.DataFrame:
             "period_end": "2025-12-31",
             "value": 500.0,
         },
+
+        {
+            "concept": "CommonStockSharesOutstanding",
+            "fiscal_year": 2025,
+            "fiscal_period": "FY",
+            "form": "10-K",
+            "unit": "shares",
+            "filing_date": "2026-02-01",
+            "period_start": None,
+            "period_end": "2025-12-31",
+            "value": 10.0,
+        },
+        {
+            "concept": "LongTermDebtCurrent",
+            "fiscal_year": 2025,
+            "fiscal_period": "FY",
+            "form": "10-K",
+            "unit": "USD",
+            "filing_date": "2026-02-01",
+            "period_start": None,
+            "period_end": "2025-12-31",
+            "value": 5.0,
+        },
+        {
+            "concept": "LongTermDebtNoncurrent",
+            "fiscal_year": 2025,
+            "fiscal_period": "FY",
+            "form": "10-K",
+            "unit": "USD",
+            "filing_date": "2026-02-01",
+            "period_start": None,
+            "period_end": "2025-12-31",
+            "value": 15.0,
+        },
     ]
 
     return pd.DataFrame(rows)
@@ -220,6 +254,11 @@ def test_fundamental_calculations() -> None:
     )
 
     assert result.revenue == 1200.0
+
+    assert result.shares_outstanding == 10.0
+    assert result.current_debt == 5.0
+    assert result.noncurrent_debt == 15.0
+    assert result.total_debt == 20.0
 
     assert result.revenue_growth == pytest.approx(
         0.20
@@ -250,6 +289,7 @@ def test_fundamental_calculations() -> None:
     assert result.liabilities_to_equity == pytest.approx(
         1.5
     )
+    
 
 def test_selects_requested_period_not_old_comparative_value() -> None:
     frame = pd.DataFrame(

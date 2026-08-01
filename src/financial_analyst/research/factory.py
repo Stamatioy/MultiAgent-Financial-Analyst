@@ -50,7 +50,12 @@ from financial_analyst.sec.company_facts import (
 from financial_analyst.sec.ticker_map import (
     SECTickerMapper,
 )
-
+from financial_analyst.agents.valuation_agent import (
+    ValuationAnalystAgent,
+)
+from financial_analyst.valuation.service import (
+    ValuationService,
+)
 
 def build_research_coordinator(
     *,
@@ -92,6 +97,9 @@ def build_research_coordinator(
         )
     )
 
+    valuation_service=ValuationService(),
+    valuation_agent=ValuationAnalystAgent(),
+
     embedding_service = EmbeddingService()
 
     vector_index = NewsVectorIndex(
@@ -116,6 +124,9 @@ def build_research_coordinator(
         fundamental_agent=(
             FundamentalAnalystAgent()
         ),
+
+        valuation_service=ValuationService(),
+        valuation_agent=ValuationAnalystAgent(),
 
         news_retriever=news_retriever,
         news_agent=NewsAnalystAgent(),

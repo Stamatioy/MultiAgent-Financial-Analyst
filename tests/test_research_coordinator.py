@@ -32,6 +32,12 @@ from financial_analyst.research.coordinator import (
 from financial_analyst.retrieval.models import (
     RetrievedNewsArticle,
 )
+from financial_analyst.agents.valuation_agent import (
+    ValuationAgentOutput,
+)
+from financial_analyst.valuation.models import (
+    ValuationMetrics,
+)
 
 def make_market_metrics() -> MarketMetrics:
     return MarketMetrics(
@@ -244,6 +250,110 @@ class FakeFundamentalAgent:
             ),
         )
 
+class FakeValuationService:
+    def analyze(
+        self,
+        *,
+        market_metrics,
+        fundamental_metrics,
+    ) -> ValuationMetrics:
+        return ValuationMetrics(
+            ticker="TEST",
+            fiscal_year=2025,
+            price_date=date(2025, 12, 31),
+
+            share_price=100.0,
+            shares_outstanding=10.0,
+
+            market_cap=1000.0,
+            enterprise_value=980.0,
+
+            trailing_pe=20.0,
+            earnings_yield=0.05,
+
+            price_to_sales=2.0,
+            price_to_book=2.0,
+
+            ev_to_sales=1.96,
+            ev_to_operating_income=16.333333,
+
+            free_cash_flow_yield=0.06,
+
+            net_cash=20.0,
+
+            debt_used=20.0,
+            cash_used=40.0,
+
+            shares_missing=False,
+            debt_missing=False,
+            cash_missing=False,
+
+            notes=[],
+        )
+
+class FakeValuationAgent:
+    def analyze(
+        self,
+        *,
+        valuation,
+        fundamentals,
+    ) -> ValuationAgentOutput:
+        return ValuationAgentOutput(
+            ticker="TEST",
+            fiscal_year=2025,
+
+            overall_valuation="fair",
+            valuation_risk="moderate",
+
+            earnings_valuation_summary=(
+                "The earnings multiple is moderate."
+            ),
+
+            revenue_valuation_summary=(
+                "The sales multiple is meaningful."
+            ),
+
+            cash_flow_valuation_summary=(
+                "Free-cash-flow yield offers support."
+            ),
+
+            enterprise_valuation_summary=(
+                "Enterprise valuation is consistent "
+                "with other measures."
+            ),
+
+            valuation_supports=[
+                "Positive earnings yield."
+            ],
+
+            valuation_concerns=[
+                "No peer comparison is available."
+            ],
+
+            evidence=[
+                {
+                    "metric": "trailing_pe",
+                    "interpretation": (
+                        "The P/E ratio is usable."
+                    ),
+                },
+                {
+                    "metric": "free_cash_flow_yield",
+                    "interpretation": (
+                        "Cash generation supports valuation."
+                    ),
+                },
+            ],
+
+            limitations=[
+                "No peer valuation comparison was supplied."
+            ],
+
+            conclusion=(
+                "The absolute valuation appears balanced."
+            ),
+        )
+
 class FakeNewsRetriever:
     def retrieve(
         self,
@@ -305,6 +415,8 @@ def test_research_coordinator_builds_bundle() -> None:
         market_agent=FakeMarketAgent(),
         fundamental_service=FakeFundamentalService(),
         fundamental_agent=FakeFundamentalAgent(),
+        valuation_service=FakeValuationService(),
+        valuation_agent=FakeValuationAgent(),
         news_retriever=FakeNewsRetriever(),
         news_agent=FakeNewsAgent(),
     )
@@ -337,6 +449,13 @@ def test_research_coordinator_builds_bundle() -> None:
         == 2025
     )
 
+    assert result.valuation_metrics.market_cap == 1000.0
+
+    assert (
+        result.valuation_analysis.overall_valuation.value
+        == "fair"
+    )
+
     assert len(
         result.retrieved_news
     ) == 1
@@ -363,6 +482,8 @@ def test_coordinator_requires_news() -> None:
         market_agent=FakeMarketAgent(),
         fundamental_service=FakeFundamentalService(),
         fundamental_agent=FakeFundamentalAgent(),
+        valuation_service=FakeValuationService(),
+        valuation_agent=FakeValuationAgent(),
         news_retriever=EmptyNewsRetriever(),
         news_agent=FakeNewsAgent(),
     )
@@ -384,3 +505,4 @@ def test_coordinator_requires_news() -> None:
             refresh_market=False,
             refresh_fundamentals=False,
         )
+

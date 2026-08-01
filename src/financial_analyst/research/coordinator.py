@@ -27,6 +27,12 @@ from financial_analyst.retrieval.news_retriever import (
 from financial_analyst.validation.ticker import (
     normalize_ticker,
 )
+from financial_analyst.agents.valuation_agent import (
+    ValuationAnalystAgent,
+)
+from financial_analyst.valuation.service import (
+    ValuationService,
+)
 
 class ResearchCoordinator:
     """
@@ -40,6 +46,8 @@ class ResearchCoordinator:
         market_agent: MarketAnalystAgent,
         fundamental_service: FundamentalDataService,
         fundamental_agent: FundamentalAnalystAgent,
+        valuation_service: ValuationService,
+        valuation_agent: ValuationAnalystAgent,
         news_retriever: NewsRetriever,
         news_agent: NewsAnalystAgent,
     ) -> None:
@@ -56,6 +64,9 @@ class ResearchCoordinator:
 
         self.news_retriever = news_retriever
         self.news_agent = news_agent
+
+        self.valuation_service = valuation_service
+        self.valuation_agent = valuation_agent
 
     def research(
         self,
@@ -148,6 +159,20 @@ class ResearchCoordinator:
             )
         )
 
+        valuation_metrics = (
+            self.valuation_service.analyze(
+                market_metrics=market_result.metrics,
+                fundamental_metrics=fundamental_metrics,
+            )
+        )
+
+        valuation_analysis = (
+            self.valuation_agent.analyze(
+                valuation=valuation_metrics,
+                fundamentals=fundamental_metrics,
+            )
+        )
+
         retrieved_news = (
             self.news_retriever.retrieve(
                 query=query,
@@ -207,6 +232,9 @@ class ResearchCoordinator:
                 fundamental_analysis
             ),
 
+            valuation_metrics=valuation_metrics,
+            valuation_analysis=valuation_analysis,
+
             retrieved_news=(
                 retrieved_news
             ),
@@ -258,6 +286,16 @@ class ResearchCoordinator:
         ):
             raise ValueError(
                 "Fundamental analysis ticker mismatch."
+            )
+
+        if bundle.valuation_metrics.ticker != ticker:
+            raise ValueError(
+                "Valuation metrics ticker mismatch."
+            )
+
+        if bundle.valuation_analysis.ticker != ticker:
+            raise ValueError(
+                "Valuation analysis ticker mismatch."
             )
 
         if (

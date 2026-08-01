@@ -22,7 +22,12 @@ from financial_analyst.market_data.models import (
 from financial_analyst.retrieval.models import (
     RetrievedNewsArticle,
 )
-
+from financial_analyst.agents.valuation_agent import (
+    ValuationAgentOutput,
+)
+from financial_analyst.valuation.models import (
+    ValuationMetrics,
+)
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -62,5 +67,9 @@ class CompanyResearchBundle(StrictModel):
     fundamental_metrics: FundamentalMetrics
     fundamental_analysis: FundamentalAgentOutput
 
+    valuation_metrics: ValuationMetrics
+    valuation_analysis: ValuationAgentOutput
+    
     retrieved_news: list[RetrievedNewsArticle]
     news_analysis: NewsAgentOutput
+

@@ -53,6 +53,12 @@ class FundamentalMetrics(StrictModel):
 
     cash_and_equivalents: float | None
 
+    shares_outstanding: float | None = None
+
+    current_debt: float | None = None
+    noncurrent_debt: float | None = None
+    total_debt: float | None = None
+
     operating_cash_flow: float | None
     capital_expenditures: float | None
     free_cash_flow: float | None
@@ -67,3 +73,4 @@ class FundamentalMetrics(StrictModel):
     return_on_equity: float | None
 
     liabilities_to_equity: float | None
+
