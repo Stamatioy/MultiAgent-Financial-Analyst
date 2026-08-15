@@ -744,13 +744,13 @@ def test_committee_receives_research_bundle() -> None:
         "user_prompt"
     ]
 
-    assert '"revenue_growth": 0.2' in prompt
+    assert '"revenue_growth":0.2' in prompt
 
-    assert '"trailing_pe": 20.0' in prompt
+    assert '"trailing_pe":20.0' in prompt
 
-    assert '"maximum_drawdown": -0.5' in prompt
+    assert '"maximum_drawdown":-0.5' in prompt
 
-    assert '"event_id": "event_1"' in prompt
+    assert '"event_id":"event_1"' in prompt
 
 
 def test_reject_wrong_ticker() -> None:

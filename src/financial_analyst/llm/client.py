@@ -88,7 +88,7 @@ class LocalLLMClient:
         response_model: type[SchemaT],
         temperature: float = 0.1,
         max_tokens: int = 1200,
-        max_attempts: int = 2,
+        max_attempts: int = 3,
         response_schema: dict | None = None,
     ) -> SchemaT:
         """
@@ -165,8 +165,9 @@ class LocalLLMClient:
                 ) from exc
 
         raise LocalLLMError(
-            "The local model failed to produce a valid structured response "
-            f"after {max_attempts} attempts. Last error: {final_error}"
+            f"{response_model.__name__} failed to produce a valid "
+            "structured response after 2 attempts. "
+            f"Last error: {final_error}"
         ) from final_error
 
     @staticmethod

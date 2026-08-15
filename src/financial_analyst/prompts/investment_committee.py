@@ -122,73 +122,228 @@ def build_investment_committee_prompt(
     payload = {
         "ticker": bundle.ticker,
 
-        "parameters": bundle.parameters.model_dump(
-            mode="json"
-        ),
+        "market": {
+            "metrics": {
+                "latest_close": (
+                    bundle.market_metrics.latest_close
+                ),
+                "annualized_return": (
+                    bundle.market_metrics.annualized_return
+                ),
+                "annualized_volatility": (
+                    bundle.market_metrics.annualized_volatility
+                ),
+                "maximum_drawdown": (
+                    bundle.market_metrics.maximum_drawdown
+                ),
+                "return_1_month": (
+                    bundle.market_metrics.return_1_month
+                ),
+                "return_3_months": (
+                    bundle.market_metrics.return_3_months
+                ),
+                "return_6_months": (
+                    bundle.market_metrics.return_6_months
+                ),
+                "return_1_year": (
+                    bundle.market_metrics.return_1_year
+                ),
+                "trend": (
+                    bundle.market_metrics.trend.value
+                ),
+            },
 
-        "market_metrics": bundle.market_metrics.model_dump(
-            mode="json"
-        ),
+            "assessment": {
+                "momentum": (
+                    bundle.market_analysis.momentum.value
+                ),
+                "risk_level": (
+                    bundle.market_analysis.risk_level.value
+                ),
+                "conclusion": (
+                    bundle.market_analysis.conclusion
+                ),
+            },
+        },
 
-        "market_analysis": bundle.market_analysis.model_dump(
-            mode="json"
-        ),
+        "fundamentals": {
+            "metrics": {
+                "revenue": (
+                    bundle.fundamental_metrics.revenue
+                ),
+                "net_income": (
+                    bundle.fundamental_metrics.net_income
+                ),
+                "free_cash_flow": (
+                    bundle.fundamental_metrics.free_cash_flow
+                ),
+                "revenue_growth": (
+                    bundle.fundamental_metrics.revenue_growth
+                ),
+                "net_income_growth": (
+                    bundle.fundamental_metrics.net_income_growth
+                ),
+                "operating_margin": (
+                    bundle.fundamental_metrics.operating_margin
+                ),
+                "net_margin": (
+                    bundle.fundamental_metrics.net_margin
+                ),
+                "return_on_equity": (
+                    bundle.fundamental_metrics.return_on_equity
+                ),
+                "liabilities_to_equity": (
+                    bundle.fundamental_metrics.liabilities_to_equity
+                ),
+            },
 
-        "fundamental_metrics": (
-            bundle.fundamental_metrics.model_dump(
-                mode="json"
-            )
-        ),
+            "assessment": {
+                "growth": (
+                    bundle.fundamental_analysis.growth.value
+                ),
+                "profitability": (
+                    bundle.fundamental_analysis.profitability.value
+                ),
+                "cash_flow": (
+                    bundle.fundamental_analysis.cash_flow.value
+                ),
+                "balance_sheet": (
+                    bundle.fundamental_analysis.balance_sheet.value
+                ),
+                "strengths": (
+                    bundle.fundamental_analysis.strengths
+                ),
+                "weaknesses": (
+                    bundle.fundamental_analysis.weaknesses
+                ),
+                "conclusion": (
+                    bundle.fundamental_analysis.conclusion
+                ),
+            },
+        },
 
-        "fundamental_analysis": (
-            bundle.fundamental_analysis.model_dump(
-                mode="json"
-            )
-        ),
+        "valuation": {
+            "metrics": {
+                "market_cap": (
+                    bundle.valuation_metrics.market_cap
+                ),
+                "enterprise_value": (
+                    bundle.valuation_metrics.enterprise_value
+                ),
+                "trailing_pe": (
+                    bundle.valuation_metrics.trailing_pe
+                ),
+                "earnings_yield": (
+                    bundle.valuation_metrics.earnings_yield
+                ),
+                "price_to_sales": (
+                    bundle.valuation_metrics.price_to_sales
+                ),
+                "price_to_book": (
+                    bundle.valuation_metrics.price_to_book
+                ),
+                "ev_to_sales": (
+                    bundle.valuation_metrics.ev_to_sales
+                ),
+                "ev_to_operating_income": (
+                    bundle.valuation_metrics.ev_to_operating_income
+                ),
+                "free_cash_flow_yield": (
+                    bundle.valuation_metrics.free_cash_flow_yield
+                ),
+            },
 
-        "valuation_metrics": (
-            bundle.valuation_metrics.model_dump(
-                mode="json"
-            )
-        ),
+            "assessment": {
+                "overall_valuation": (
+                    bundle.valuation_analysis
+                    .overall_valuation.value
+                ),
+                "valuation_risk": (
+                    bundle.valuation_analysis
+                    .valuation_risk.value
+                ),
+                "supports": (
+                    bundle.valuation_analysis
+                    .valuation_supports
+                ),
+                "concerns": (
+                    bundle.valuation_analysis
+                    .valuation_concerns
+                ),
+                "conclusion": (
+                    bundle.valuation_analysis.conclusion
+                ),
+            },
+        },
 
-        "valuation_analysis": (
-            bundle.valuation_analysis.model_dump(
-                mode="json"
-            )
-        ),
+        "risk": {
+            "metrics": {
+                "annualized_volatility": (
+                    bundle.risk_metrics.annualized_volatility
+                ),
+                "beta": (
+                    bundle.risk_metrics.beta
+                ),
+                "sharpe_ratio": (
+                    bundle.risk_metrics.sharpe_ratio
+                ),
+                "sortino_ratio": (
+                    bundle.risk_metrics.sortino_ratio
+                ),
+                "daily_var_95": (
+                    bundle.risk_metrics.daily_var_95
+                ),
+                "daily_cvar_95": (
+                    bundle.risk_metrics.daily_cvar_95
+                ),
+                "worst_daily_return": (
+                    bundle.risk_metrics.worst_daily_return
+                ),
+                "worst_monthly_return": (
+                    bundle.risk_metrics.worst_monthly_return
+                ),
+                "maximum_drawdown": (
+                    bundle.risk_metrics.maximum_drawdown
+                ),
+                "max_drawdown_duration_days": (
+                    bundle.risk_metrics
+                    .max_drawdown_duration_days
+                ),
+                "net_debt": (
+                    bundle.risk_metrics.net_debt
+                ),
+            },
 
-        "risk_metrics": (
-            bundle.risk_metrics.model_dump(
-                mode="json"
-            )
-        ),
+            "assessment": {
+                "overall_risk": (
+                    bundle.risk_analysis.overall_risk.value
+                ),
+                "risk_factors": (
+                    bundle.risk_analysis.risk_factors
+                ),
+                "risk_mitigants": (
+                    bundle.risk_analysis.risk_mitigants
+                ),
+                "conclusion": (
+                    bundle.risk_analysis.conclusion
+                ),
+            },
+        },
 
-        "risk_analysis": (
-            bundle.risk_analysis.model_dump(
-                mode="json"
-            )
-        ),
-
-        "news_analysis": {
+        "news": {
             "overall_sentiment": (
-                bundle.news_analysis.overall_sentiment.value
+                bundle.news_analysis
+                .overall_sentiment.value
             ),
 
-            "overall_summary": (
-                bundle.news_analysis.overall_summary
+            "positive_developments": (
+                bundle.news_analysis
+                .major_positive_developments
             ),
 
-            "major_positive_developments": (
-                bundle.news_analysis.major_positive_developments
-            ),
-
-            "major_negative_developments": (
-                bundle.news_analysis.major_negative_developments
-            ),
-
-            "limitations": (
-                bundle.news_analysis.limitations
+            "negative_developments": (
+                bundle.news_analysis
+                .major_negative_developments
             ),
 
             "events": news_events,
@@ -197,8 +352,8 @@ def build_investment_committee_prompt(
 
     serialized = json.dumps(
         payload,
-        indent=2,
         ensure_ascii=False,
+        separators=(",", ":"),
     )
 
     return f"""

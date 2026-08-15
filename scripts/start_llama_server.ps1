@@ -31,7 +31,7 @@ $ChatTemplateArgs = '{\"enable_thinking\":false}'
     --alias "qwen3-8b" `
     --host "127.0.0.1" `
     --port 8080 `
-    --ctx-size 8192 `
+    --ctx-size 16384 `
     --n-gpu-layers 99 `
     --batch-size 512 `
     --ubatch-size 256 `

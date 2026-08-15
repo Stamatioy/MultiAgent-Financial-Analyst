@@ -8,6 +8,8 @@ pandas>=2.3
 numpy>=2.0
 sentence-transformers>=5.0
 faiss-cpu>=1.14
+fastapi>=0.141
+uvicorn[standard]>=0.35
 
 [dev]
 pytest>=9.0
