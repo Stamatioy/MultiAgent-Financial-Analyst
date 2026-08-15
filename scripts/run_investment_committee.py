@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import (
+    datetime,
+    timezone,
+)
 
+from financial_analyst.committee.factory import (
+    build_investment_pipeline,
+)
 from financial_analyst.database.connection import (
     get_database_connection,
-)
-from financial_analyst.research.factory import (
-    build_research_coordinator,
 )
 from financial_analyst.sec.client import (
     SECClient,
@@ -28,16 +31,16 @@ def parse_as_of(
             + "+00:00"
         )
 
-    parsed = datetime.fromisoformat(
+    result = datetime.fromisoformat(
         text
     )
 
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(
+    if result.tzinfo is None:
+        result = result.replace(
             tzinfo=timezone.utc
         )
 
-    return parsed.astimezone(
+    return result.astimezone(
         timezone.utc
     )
 
@@ -45,13 +48,13 @@ def parse_as_of(
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Run coordinated multi-agent research "
-            "for one company."
+            "Run complete multi-agent company research "
+            "and Investment Committee analysis."
         )
     )
 
     parser.add_argument(
-        "ticker",
+        "ticker"
     )
 
     parser.add_argument(
@@ -66,6 +69,17 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--benchmark",
+        default="^GSPC",
+    )
+
+    parser.add_argument(
+        "--risk-free-rate",
+        type=float,
+        default=0.0,
+    )
+
+    parser.add_argument(
         "--news-limit",
         type=int,
         default=15,
@@ -75,9 +89,8 @@ def parse_arguments() -> argparse.Namespace:
         "--news-query",
         type=str,
         default=(
-            "material company developments, "
-            "earnings, guidance, products, "
-            "regulation and risks"
+            "material company developments, earnings, "
+            "guidance, products, competition and risks"
         ),
     )
 
@@ -98,18 +111,11 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--benchmark",
-        type=str,
-        default="^GSPC",
-    )
-
-    parser.add_argument(
-        "--risk-free-rate",
-        type=float,
-        default=0.0,
+        "--committee-only",
+        action="store_true",
         help=(
-            "Annual risk-free rate as decimal. "
-            "Example: 0.04 means 4%%."
+            "Print only the Investment Committee output "
+            "rather than the complete research report."
         ),
     )
 
@@ -125,30 +131,22 @@ def main() -> None:
 
     try:
         with SECClient() as sec_client:
-            coordinator = (
-                build_research_coordinator(
-                    connection=connection,
-                    sec_client=sec_client,
-                )
+            pipeline = build_investment_pipeline(
+                connection=connection,
+                sec_client=sec_client,
             )
 
-            result = coordinator.research(
+            result = pipeline.analyze(
                 ticker=args.ticker,
-                fiscal_year=args.fiscal_year,
+
+                fiscal_year=(
+                    args.fiscal_year
+                ),
+
                 market_years=(
                     args.market_years
                 ),
-                news_query=args.news_query,
-                news_limit=args.news_limit,
-                as_of=parse_as_of(
-                    args.as_of
-                ),
-                refresh_market=(
-                    not args.cached_market
-                ),
-                refresh_fundamentals=(
-                    not args.cached_fundamentals
-                ),
+
                 benchmark_ticker=(
                     args.benchmark
                 ),
@@ -156,13 +154,41 @@ def main() -> None:
                 risk_free_rate_annual=(
                     args.risk_free_rate
                 ),
+
+                news_query=(
+                    args.news_query
+                ),
+
+                news_limit=(
+                    args.news_limit
+                ),
+
+                as_of=parse_as_of(
+                    args.as_of
+                ),
+
+                refresh_market=(
+                    not args.cached_market
+                ),
+
+                refresh_fundamentals=(
+                    not args.cached_fundamentals
+                ),
             )
 
-        print(
-            result.model_dump_json(
-                indent=2
+        if args.committee_only:
+            print(
+                result.committee.model_dump_json(
+                    indent=2
+                )
             )
-        )
+
+        else:
+            print(
+                result.model_dump_json(
+                    indent=2
+                )
+            )
 
     finally:
         connection.close()

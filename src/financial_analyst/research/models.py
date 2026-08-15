@@ -28,6 +28,13 @@ from financial_analyst.agents.valuation_agent import (
 from financial_analyst.valuation.models import (
     ValuationMetrics,
 )
+from financial_analyst.agents.risk_agent import (
+    RiskAgentOutput,
+)
+from financial_analyst.risk.models import (
+    RiskMetrics,
+)
+
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -41,6 +48,10 @@ class ResearchParameters(StrictModel):
         ge=1,
         le=30,
     )
+
+    benchmark_ticker: str = "^GSPC"
+
+    risk_free_rate_annual: float = 0.0
 
     news_query: str = Field(
         min_length=1,
@@ -69,6 +80,9 @@ class CompanyResearchBundle(StrictModel):
 
     valuation_metrics: ValuationMetrics
     valuation_analysis: ValuationAgentOutput
+
+    risk_metrics: RiskMetrics
+    risk_analysis: RiskAgentOutput
     
     retrieved_news: list[RetrievedNewsArticle]
     news_analysis: NewsAgentOutput

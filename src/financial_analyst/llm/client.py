@@ -89,6 +89,7 @@ class LocalLLMClient:
         temperature: float = 0.1,
         max_tokens: int = 1200,
         max_attempts: int = 2,
+        response_schema: dict | None = None,
     ) -> SchemaT:
         """
         Generate schema-constrained JSON and validate it locally.
@@ -100,7 +101,19 @@ class LocalLLMClient:
         if max_attempts < 1 or max_attempts > 3:
             raise ValueError("max_attempts must be between 1 and 3.")
 
-        schema = response_model.model_json_schema()
+        schema = (
+            response_schema
+            if response_schema is not None
+            else response_model.model_json_schema()
+        )
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": response_model.__name__,
+                "schema": schema,
+                "strict": True,
+            },
+        }
         final_error: Exception | None = None
 
         for attempt in range(1, max_attempts + 1):
@@ -119,14 +132,7 @@ class LocalLLMClient:
                     ],
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    response_format={
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": response_model.__name__,
-                            "schema": schema,
-                            "strict": True,
-                        },
-                    },
+                    response_format=response_format,
                 )
 
                 content = response.choices[0].message.content

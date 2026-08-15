@@ -33,6 +33,12 @@ from financial_analyst.agents.valuation_agent import (
 from financial_analyst.valuation.service import (
     ValuationService,
 )
+from financial_analyst.agents.risk_agent import (
+    RiskAnalystAgent,
+)
+from financial_analyst.risk.service import (
+    RiskService,
+)
 
 class ResearchCoordinator:
     """
@@ -48,6 +54,8 @@ class ResearchCoordinator:
         fundamental_agent: FundamentalAnalystAgent,
         valuation_service: ValuationService,
         valuation_agent: ValuationAnalystAgent,
+        risk_service: RiskService,
+        risk_agent: RiskAnalystAgent,
         news_retriever: NewsRetriever,
         news_agent: NewsAnalystAgent,
     ) -> None:
@@ -68,12 +76,17 @@ class ResearchCoordinator:
         self.valuation_service = valuation_service
         self.valuation_agent = valuation_agent
 
+        self.risk_service = risk_service
+        self.risk_agent = risk_agent
+
     def research(
         self,
         *,
         ticker: str,
         fiscal_year: int,
         market_years: int = 5,
+        benchmark_ticker: str = "^GSPC",
+        risk_free_rate_annual: float = 0.0,
         news_query: str = (
             "material company developments, earnings, "
             "guidance, products, regulation and risks"
@@ -173,6 +186,37 @@ class ResearchCoordinator:
             )
         )
 
+        risk_metrics = (
+            self.risk_service.analyze(
+                ticker=normalized_ticker,
+                benchmark_ticker=(
+                    benchmark_ticker
+                ),
+                start_date=(
+                    market_start_date
+                ),
+                end_date=(
+                    market_end_date
+                ),
+                fundamentals=(
+                    fundamental_metrics
+                ),
+                risk_free_rate_annual=(
+                    risk_free_rate_annual
+                ),
+                refresh_company=False,
+                refresh_benchmark=(
+                    refresh_market
+                ),
+            )
+        )
+
+        risk_analysis = (
+            self.risk_agent.analyze(
+                risk_metrics
+            )
+        )
+
         retrieved_news = (
             self.news_retriever.retrieve(
                 query=query,
@@ -207,6 +251,10 @@ class ResearchCoordinator:
             news_query=query,
             news_limit=news_limit,
             as_of=resolved_as_of,
+            benchmark_ticker=benchmark_ticker,
+            risk_free_rate_annual=(
+                risk_free_rate_annual
+            ),
         )
 
         bundle = CompanyResearchBundle(
@@ -234,6 +282,9 @@ class ResearchCoordinator:
 
             valuation_metrics=valuation_metrics,
             valuation_analysis=valuation_analysis,
+
+            risk_metrics=risk_metrics,
+            risk_analysis=risk_analysis,
 
             retrieved_news=(
                 retrieved_news
@@ -298,6 +349,30 @@ class ResearchCoordinator:
                 "Valuation analysis ticker mismatch."
             )
 
+        if (
+            bundle.risk_metrics.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Risk metrics ticker mismatch."
+            )
+
+        if (
+            bundle.risk_analysis.ticker
+            != ticker
+        ):
+            raise ValueError(
+                "Risk analysis ticker mismatch."
+            )
+
+        if (
+            bundle.risk_metrics.benchmark_ticker
+            != bundle.risk_analysis.benchmark_ticker
+        ):
+            raise ValueError(
+                "Risk benchmark ticker mismatch."
+            )
+        
         if (
             bundle.news_analysis.ticker
             != ticker

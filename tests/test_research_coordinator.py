@@ -38,6 +38,12 @@ from financial_analyst.agents.valuation_agent import (
 from financial_analyst.valuation.models import (
     ValuationMetrics,
 )
+from financial_analyst.agents.risk_agent import (
+    RiskAgentOutput,
+)
+from financial_analyst.risk.models import (
+    RiskMetrics,
+)
 
 def make_market_metrics() -> MarketMetrics:
     return MarketMetrics(
@@ -353,6 +359,133 @@ class FakeValuationAgent:
                 "The absolute valuation appears balanced."
             ),
         )
+class FakeRiskService:
+    def analyze(
+        self,
+        **kwargs,
+    ) -> RiskMetrics:
+        return RiskMetrics(
+            ticker="TEST",
+            benchmark_ticker="^GSPC",
+
+            start_date=date(
+                2021,
+                1,
+                1,
+            ),
+
+            end_date=date(
+                2025,
+                12,
+                31,
+            ),
+
+            stock_observations=1200,
+
+            aligned_benchmark_observations=1180,
+
+            risk_free_rate_annual=0.0,
+
+            annualized_volatility=0.40,
+            downside_deviation=0.25,
+
+            beta=1.40,
+            benchmark_correlation=0.75,
+
+            sharpe_ratio=0.80,
+            sortino_ratio=1.10,
+
+            daily_var_95=0.04,
+            daily_cvar_95=0.06,
+
+            worst_daily_return=-0.10,
+            worst_weekly_return=-0.15,
+            worst_monthly_return=-0.22,
+
+            maximum_drawdown=-0.50,
+
+            max_drawdown_duration_days=300,
+
+            average_daily_volume_20=(
+                20_000_000.0
+            ),
+
+            average_daily_dollar_volume_20=(
+                2_000_000_000.0
+            ),
+
+            net_debt=-20.0,
+
+            debt_to_free_cash_flow=0.30,
+
+            benchmark_data_available=True,
+
+            notes=[],
+        )
+
+class FakeRiskAgent:
+    def analyze(
+        self,
+        metrics: RiskMetrics,
+    ) -> RiskAgentOutput:
+        return RiskAgentOutput(
+            ticker="TEST",
+            benchmark_ticker="^GSPC",
+
+            overall_risk="high",
+            market_risk="high",
+            downside_risk="high",
+            financial_risk="low",
+            liquidity_risk="low",
+
+            market_risk_summary=(
+                "Market risk is elevated."
+            ),
+
+            downside_risk_summary=(
+                "Historical downside was substantial."
+            ),
+
+            financial_risk_summary=(
+                "Financial risk is comparatively low."
+            ),
+
+            liquidity_risk_summary=(
+                "Trading liquidity was historically strong."
+            ),
+
+            risk_factors=[
+                "High volatility."
+            ],
+
+            risk_mitigants=[
+                "Net cash position."
+            ],
+
+            evidence=[
+                {
+                    "metric": "annualized_volatility",
+                    "interpretation": (
+                        "Volatility was elevated."
+                    ),
+                },
+                {
+                    "metric": "maximum_drawdown",
+                    "interpretation": (
+                        "Drawdown was substantial."
+                    ),
+                },
+            ],
+
+            limitations=[
+                "Historical risk may not persist."
+            ],
+
+            conclusion=(
+                "The stock has high historical "
+                "market and downside risk."
+            ),
+        )
 
 class FakeNewsRetriever:
     def retrieve(
@@ -417,6 +550,8 @@ def test_research_coordinator_builds_bundle() -> None:
         fundamental_agent=FakeFundamentalAgent(),
         valuation_service=FakeValuationService(),
         valuation_agent=FakeValuationAgent(),
+        risk_service=FakeRiskService(),
+        risk_agent=FakeRiskAgent(),
         news_retriever=FakeNewsRetriever(),
         news_agent=FakeNewsAgent(),
     )
@@ -456,6 +591,16 @@ def test_research_coordinator_builds_bundle() -> None:
         == "fair"
     )
 
+    assert (
+    result.risk_metrics.beta
+    == 1.40
+    )
+
+    assert (
+        result.risk_analysis.overall_risk.value
+        == "high"
+    )
+
     assert len(
         result.retrieved_news
     ) == 1
@@ -484,6 +629,8 @@ def test_coordinator_requires_news() -> None:
         fundamental_agent=FakeFundamentalAgent(),
         valuation_service=FakeValuationService(),
         valuation_agent=FakeValuationAgent(),
+        risk_service=FakeRiskService(),
+        risk_agent=FakeRiskAgent(),
         news_retriever=EmptyNewsRetriever(),
         news_agent=FakeNewsAgent(),
     )

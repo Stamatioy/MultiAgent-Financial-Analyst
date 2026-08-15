@@ -56,6 +56,12 @@ from financial_analyst.agents.valuation_agent import (
 from financial_analyst.valuation.service import (
     ValuationService,
 )
+from financial_analyst.agents.risk_agent import (
+    RiskAnalystAgent,
+)
+from financial_analyst.risk.service import (
+    RiskService,
+)
 
 def build_research_coordinator(
     *,
@@ -100,6 +106,11 @@ def build_research_coordinator(
     valuation_service=ValuationService(),
     valuation_agent=ValuationAnalystAgent(),
 
+    risk_service = RiskService(
+        market_service=market_service,
+        repository=price_repository,
+    )
+
     embedding_service = EmbeddingService()
 
     vector_index = NewsVectorIndex(
@@ -124,6 +135,9 @@ def build_research_coordinator(
         fundamental_agent=(
             FundamentalAnalystAgent()
         ),
+
+        risk_service=risk_service,
+        risk_agent=RiskAnalystAgent(),
 
         valuation_service=ValuationService(),
         valuation_agent=ValuationAnalystAgent(),
