@@ -375,10 +375,37 @@ class ResearchCoordinator:
                 articles=articles,
             )
         )
+
+        news_progress_result = (
+            news_analysis.model_dump(
+                mode="json"
+            )
+        )
+
+        news_progress_result[
+            "_sources"
+        ] = [
+            {
+                "article_id": (
+                    retrieved.article.article_id
+                ),
+                "title": (
+                    retrieved.article.title
+                ),
+                "publisher": (
+                    retrieved.article.publisher
+                ),
+                "url": (
+                    retrieved.article.url
+                ),
+            }
+            for retrieved in retrieved_news
+        ]
+
         progress(
             "news",
             "completed",
-            news_analysis,
+            news_progress_result,
         )
 
         parameters = ResearchParameters(

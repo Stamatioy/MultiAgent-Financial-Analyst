@@ -449,6 +449,11 @@ function NewsResult({
       ? data.events
       : [];
 
+  const sources =
+    Array.isArray(data._sources)
+      ? data._sources
+      : [];
+
   return (
     <ResultLayout>
       <MetricRow>
@@ -493,8 +498,7 @@ function NewsResult({
                 index,
               ) => {
                 if (
-                  typeof event
-                  !== "object"
+                  typeof event !== "object"
                   || event === null
                 ) {
                   return null;
@@ -506,14 +510,50 @@ function NewsResult({
                     unknown
                   >;
 
+                const supportingIds =
+                  Array.isArray(
+                    item.supporting_article_ids
+                  )
+                    ? item.supporting_article_ids.filter(
+                        (
+                          value,
+                        ): value is string =>
+                          typeof value === "string",
+                      )
+                    : [];
+
+                const eventSources =
+                  sources.filter(
+                    (source) => {
+                      if (
+                        typeof source !== "object"
+                        || source === null
+                      ) {
+                        return false;
+                      }
+
+                      const sourceData =
+                        source as Record<
+                          string,
+                          unknown
+                        >;
+
+                      return (
+                        typeof sourceData.article_id
+                          === "string"
+                        && supportingIds.includes(
+                          sourceData.article_id
+                        )
+                      );
+                    },
+                  );
+
                 return (
                   <div
-                    key={
-                      String(
-                        item.event_id
-                        ?? index
-                      )
-                    }
+                    key={String(
+                      item.event_id
+                      ?? index
+                    )}
                     className="rounded-xl border border-[var(--border-soft)] bg-white/[0.015] p-4"
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -541,9 +581,84 @@ function NewsResult({
 
                     <p className="mt-3 text-sm leading-6 text-[var(--muted-light)]">
                       {String(
-                        item.summary ?? ""
+                        item.summary
+                        ?? ""
                       )}
                     </p>
+
+                    {eventSources.length > 0 && (
+                      <div className="mt-4 border-t border-[var(--border-soft)] pt-3">
+                        <div className="text-[10px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                          Sources
+                        </div>
+
+                        <div className="mt-2 flex flex-col gap-2">
+                          {eventSources.map(
+                            (
+                              source,
+                              sourceIndex,
+                            ) => {
+                              const sourceData =
+                                source as Record<
+                                  string,
+                                  unknown
+                                >;
+
+                              const url =
+                                typeof sourceData.url
+                                  === "string"
+                                  ? sourceData.url
+                                  : null;
+
+                              const title =
+                                typeof sourceData.title
+                                  === "string"
+                                  ? sourceData.title
+                                  : "Source article";
+
+                              const publisher =
+                                typeof sourceData.publisher
+                                  === "string"
+                                  ? sourceData.publisher
+                                  : null;
+
+                              if (!url) {
+                                return null;
+                              }
+
+                              return (
+                                <a
+                                  key={String(
+                                    sourceData.article_id
+                                    ?? sourceIndex
+                                  )}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="group flex items-center justify-between gap-4 rounded-lg border border-[var(--border-soft)] bg-black/10 px-3 py-2 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.03]"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="truncate text-xs font-medium text-white/80 transition group-hover:text-white">
+                                      {title}
+                                    </div>
+
+                                    {publisher && (
+                                      <div className="mt-0.5 text-[10px] text-[var(--muted)]">
+                                        {publisher}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <span className="shrink-0 text-xs text-emerald-400">
+                                    Open ↗
+                                  </span>
+                                </a>
+                              );
+                            },
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               },

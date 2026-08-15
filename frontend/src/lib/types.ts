@@ -294,3 +294,9 @@ export type AgentPartialResult = {
   };
 };
 
+export type NewsSource = {
+  article_id: string;
+  title: string;
+  publisher: string | null;
+  url: string | null;
+};
