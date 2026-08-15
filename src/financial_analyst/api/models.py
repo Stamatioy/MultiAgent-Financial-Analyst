@@ -56,3 +56,59 @@ class ResearchRequest(StrictAPIModel):
 
 class ResearchResponse(StrictAPIModel):
     report: CompanyInvestmentReport
+
+from enum import Enum
+
+
+class ResearchJobStatus(str, Enum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ResearchStepStatus(str, Enum):
+    WAITING = "waiting"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ResearchStep(StrictAPIModel):
+    name: str
+    label: str
+
+    status: ResearchStepStatus = (
+        ResearchStepStatus.WAITING
+    )
+
+
+class ResearchJobCreated(StrictAPIModel):
+    job_id: str
+
+    status: ResearchJobStatus
+
+
+class ResearchJobStatusResponse(StrictAPIModel):
+    job_id: str
+
+    ticker: str
+
+    status: ResearchJobStatus
+
+    current_step: str | None
+
+    progress: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    steps: list[ResearchStep]
+
+    error: str | None = None
+
+
+class ResearchJobResultResponse(StrictAPIModel):
+    job_id: str
+
+    report: CompanyInvestmentReport

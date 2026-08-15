@@ -13,8 +13,12 @@ import {
 } from "lucide-react";
 
 import {
-  researchCompany,
+  createResearchJob,
 } from "@/lib/api";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   CompanyInvestmentReport,
@@ -55,6 +59,8 @@ export function ResearchForm() {
       null,
     );
 
+  const router =
+    useRouter();
   const [report, setReport] =
     useState<
       CompanyInvestmentReport | null
@@ -71,8 +77,8 @@ export function ResearchForm() {
     setLoading(true);
 
     try {
-      const response =
-        await researchCompany({
+      const job =
+        await createResearchJob({
           ticker:
             ticker
               .trim()
@@ -103,8 +109,8 @@ export function ResearchForm() {
             false,
         });
 
-      setReport(
-        response.report,
+      router.push(
+        `/research/${job.job_id}`
       );
     } catch (exception) {
       if (
@@ -408,11 +414,6 @@ export function ResearchForm() {
         </div>
       )}
 
-      {report && (
-        <ResearchPreview
-          report={report}
-        />
-      )}
     </section>
   );
 }
@@ -501,195 +502,3 @@ function NumberField({
 }
 
 
-function ResearchPreview({
-  report,
-}: {
-  report: CompanyInvestmentReport;
-}) {
-  const committee =
-    report.committee;
-
-  return (
-    <div
-      className="
-        mt-6
-        rounded-xl
-        border
-        border-[var(--border)]
-        bg-[#0a0f16]
-        p-5
-      "
-    >
-      <div
-        className="
-          flex
-          flex-wrap
-          items-start
-          justify-between
-          gap-4
-        "
-      >
-        <div>
-          <div
-            className="
-              text-xs
-              uppercase
-              tracking-[0.16em]
-              text-[var(--muted)]
-            "
-          >
-            Investment Committee
-          </div>
-
-          <div
-            className="
-              mt-2
-              text-xl
-              font-semibold
-              text-white
-            "
-          >
-            {report.ticker}
-          </div>
-        </div>
-
-        <RecommendationBadge
-          recommendation={
-            committee.recommendation
-          }
-        />
-      </div>
-
-      <div
-        className="
-          mt-5
-          grid
-          grid-cols-2
-          gap-4
-        "
-      >
-        <div>
-          <div
-            className="
-              text-[10px]
-              uppercase
-              tracking-[0.14em]
-              text-[var(--muted)]
-            "
-          >
-            Confidence
-          </div>
-
-          <div
-            className="
-              mt-1
-              text-sm
-              font-medium
-              text-white
-            "
-          >
-            {formatPercent(
-              committee.confidence_score,
-              0,
-            )}
-          </div>
-        </div>
-
-        <div>
-          <div
-            className="
-              text-[10px]
-              uppercase
-              tracking-[0.14em]
-              text-[var(--muted)]
-            "
-          >
-            Horizon
-          </div>
-
-          <div
-            className="
-              mt-1
-              text-sm
-              font-medium
-              text-white
-            "
-          >
-            {formatLabel(
-              committee.investment_horizon,
-            )}
-          </div>
-        </div>
-      </div>
-
-      <p
-        className="
-          mt-5
-          text-xs
-          leading-6
-          text-[var(--muted-light)]
-        "
-      >
-        {committee.thesis}
-      </p>
-
-      <div
-        className="
-          mt-5
-          text-xs
-          text-emerald-400
-        "
-      >
-        Full research dashboard comes
-        in Milestone 18.
-      </div>
-    </div>
-  );
-}
-
-
-function RecommendationBadge({
-  recommendation,
-}: {
-  recommendation: string;
-}) {
-  const label =
-    formatLabel(
-      recommendation,
-    );
-
-  const classes =
-    recommendation.includes(
-      "attractive",
-    ) &&
-    !recommendation.includes(
-      "unattractive",
-    )
-      ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-      : recommendation ===
-          "watchlist"
-        ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
-        : recommendation.includes(
-              "unattractive",
-            )
-          ? "border-red-400/20 bg-red-400/10 text-red-300"
-          : "border-blue-400/20 bg-blue-400/10 text-blue-300";
-
-  return (
-    <span
-      className={`
-        rounded-full
-        border
-        px-3
-        py-1.5
-        text-[10px]
-        font-semibold
-        uppercase
-        tracking-[0.13em]
-        ${classes}
-      `}
-    >
-      {label}
-    </span>
-  );
-}

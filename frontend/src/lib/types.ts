@@ -182,3 +182,56 @@ export interface CompanyInvestmentReport {
 export interface ResearchResponse {
   report: CompanyInvestmentReport;
 }
+
+export type ResearchJobStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed";
+
+
+export type ResearchStepStatus =
+  | "waiting"
+  | "running"
+  | "completed"
+  | "failed";
+
+
+export interface ResearchStep {
+  name: string;
+
+  label: string;
+
+  status: ResearchStepStatus;
+}
+
+
+export interface ResearchJobCreated {
+  job_id: string;
+
+  status: ResearchJobStatus;
+}
+
+
+export interface ResearchJobStatusResponse {
+  job_id: string;
+
+  ticker: string;
+
+  status: ResearchJobStatus;
+
+  current_step: string | null;
+
+  progress: number;
+
+  steps: ResearchStep[];
+
+  error: string | null;
+}
+
+
+export interface ResearchJobResultResponse {
+  job_id: string;
+
+  report: CompanyInvestmentReport;
+}

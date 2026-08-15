@@ -11,7 +11,7 @@ from financial_analyst.committee.service import (
 from financial_analyst.research.coordinator import (
     ResearchCoordinator,
 )
-
+from collections.abc import Callable
 
 class InvestmentResearchPipeline:
     """
@@ -44,6 +44,13 @@ class InvestmentResearchPipeline:
         as_of: datetime | None = None,
         refresh_market: bool = True,
         refresh_fundamentals: bool = True,
+        progress_callback: (
+            Callable[
+                [str, str],
+                None,
+            ]
+            | None
+        ) = None,
     ) -> CompanyInvestmentReport:
         bundle = self.coordinator.research(
             ticker=ticker,
@@ -63,13 +70,35 @@ class InvestmentResearchPipeline:
 
             as_of=as_of,
 
-            refresh_market=refresh_market,
+            refresh_market=(
+                refresh_market
+            ),
 
             refresh_fundamentals=(
                 refresh_fundamentals
             ),
+
+            progress_callback=(
+                progress_callback
+            ),
         )
 
-        return self.committee.create_report(
-            bundle
+        if progress_callback is not None:
+            progress_callback(
+                "committee",
+                "running",
+            )
+
+        report = (
+            self.committee.create_report(
+                bundle
+            )
         )
+
+        if progress_callback is not None:
+            progress_callback(
+                "committee",
+                "completed",
+            )
+
+        return report

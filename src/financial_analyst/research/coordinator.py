@@ -39,6 +39,12 @@ from financial_analyst.agents.risk_agent import (
 from financial_analyst.risk.service import (
     RiskService,
 )
+from collections.abc import Callable
+
+ProgressCallback = Callable[
+    [str, str],
+    None,
+]
 
 class ResearchCoordinator:
     """
@@ -95,7 +101,21 @@ class ResearchCoordinator:
         as_of: datetime | None = None,
         refresh_market: bool = True,
         refresh_fundamentals: bool = True,
+        progress_callback: (
+            ProgressCallback | None
+        ) = None,
     ) -> CompanyResearchBundle:
+        
+        def progress(
+            step: str,
+            status: str,
+        ) -> None:
+            if progress_callback is not None:
+                progress_callback(
+                    step,
+                    status,
+                )
+        
         normalized_ticker = normalize_ticker(
             ticker
         )
@@ -142,7 +162,10 @@ class ResearchCoordinator:
                 )
             )
         )
-
+        progress(
+            "market",
+            "running",
+        )
         market_result = (
             self.market_service.analyze(
                 ticker=normalized_ticker,
@@ -157,7 +180,15 @@ class ResearchCoordinator:
                 market_result.metrics
             )
         )
+        progress(
+            "market",
+            "completed",
+        )
 
+        progress(
+            "fundamentals",
+            "running",
+        )
         fundamental_metrics = (
             self.fundamental_service.analyze(
                 ticker=normalized_ticker,
@@ -171,7 +202,15 @@ class ResearchCoordinator:
                 fundamental_metrics
             )
         )
+        progress(
+            "fundamentals",
+            "completed",
+        )
 
+        progress(
+            "valuation",
+            "running",
+        )
         valuation_metrics = (
             self.valuation_service.analyze(
                 market_metrics=market_result.metrics,
@@ -185,7 +224,15 @@ class ResearchCoordinator:
                 fundamentals=fundamental_metrics,
             )
         )
+        progress(
+            "valuation",
+            "completed",
+        )
 
+        progress(
+            "risk",
+            "running",
+        )
         risk_metrics = (
             self.risk_service.analyze(
                 ticker=normalized_ticker,
@@ -216,7 +263,15 @@ class ResearchCoordinator:
                 risk_metrics
             )
         )
+        progress(
+            "risk",
+            "completed",
+        )
 
+        progress(
+            "news",
+            "running",
+        )
         retrieved_news = (
             self.news_retriever.retrieve(
                 query=query,
@@ -242,6 +297,10 @@ class ResearchCoordinator:
                 ticker=normalized_ticker,
                 articles=articles,
             )
+        )
+        progress(
+            "news",
+            "completed",
         )
 
         parameters = ResearchParameters(

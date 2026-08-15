@@ -11,7 +11,9 @@ from financial_analyst.api.routes.health import (
 from financial_analyst.api.routes.research import (
     router as research_router,
 )
-
+from financial_analyst.api.routes.research_jobs import (
+    router as research_jobs_router,
+)
 
 app = FastAPI(
     title="Multi-Agent Financial Analyst API",
@@ -37,6 +39,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(
+    research_jobs_router
+)
 
 app.include_router(
     health_router
