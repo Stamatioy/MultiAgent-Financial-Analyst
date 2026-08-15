@@ -15,7 +15,9 @@ from financial_analyst.sec.company_facts import (
 from financial_analyst.sec.ticker_map import (
     SECTickerMapper,
 )
-
+from financial_analyst.validation.ticker import (
+    normalize_ticker,
+)
 
 class FundamentalDataService:
     def __init__(
@@ -61,4 +63,23 @@ class FundamentalDataService:
             ticker=identity.ticker,
             facts=stored,
             fiscal_year=fiscal_year,
+        )
+
+    def get_cached_facts(
+        self,
+        *,
+        ticker: str,
+    ):
+        normalized_ticker = (
+            normalize_ticker(
+                ticker
+            )
+        )
+
+        return (
+            self.repository.get_facts(
+                ticker=(
+                    normalized_ticker
+                )
+            )
         )

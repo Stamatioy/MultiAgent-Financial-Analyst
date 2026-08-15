@@ -13,6 +13,8 @@ from financial_analyst.research.coordinator import (
 )
 from collections.abc import Callable
 
+from typing import Any
+
 class InvestmentResearchPipeline:
     """
     Runs specialist research first and then sends the validated
@@ -46,7 +48,7 @@ class InvestmentResearchPipeline:
         refresh_fundamentals: bool = True,
         progress_callback: (
             Callable[
-                [str, str],
+                [str, str, Any | None],
                 None,
             ]
             | None
@@ -87,6 +89,7 @@ class InvestmentResearchPipeline:
             progress_callback(
                 "committee",
                 "running",
+                None,
             )
 
         report = (
@@ -99,6 +102,7 @@ class InvestmentResearchPipeline:
             progress_callback(
                 "committee",
                 "completed",
+                report.committee,
             )
 
         return report

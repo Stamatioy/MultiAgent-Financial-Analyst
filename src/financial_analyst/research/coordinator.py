@@ -40,9 +40,15 @@ from financial_analyst.risk.service import (
     RiskService,
 )
 from collections.abc import Callable
+from typing import Any
+from financial_analyst.visualization.chart_data import (
+    build_drawdown_history,
+    build_financial_history,
+    build_price_history,
+)
 
 ProgressCallback = Callable[
-    [str, str],
+    [str, str, Any | None],
     None,
 ]
 
@@ -109,11 +115,13 @@ class ResearchCoordinator:
         def progress(
             step: str,
             status: str,
+            result: Any | None = None,
         ) -> None:
             if progress_callback is not None:
                 progress_callback(
                     step,
                     status,
+                    result,
                 )
         
         normalized_ticker = normalize_ticker(
@@ -180,9 +188,36 @@ class ResearchCoordinator:
                 market_result.metrics
             )
         )
+
+        market_prices = (
+            self.market_service
+            .get_cached_prices(
+                ticker=normalized_ticker,
+                start_date=market_start_date,
+                end_date=market_end_date,
+            )
+        )
+
+        market_progress_result = (
+            market_analysis.model_dump(
+                mode="json"
+            )
+        )
+
+        market_progress_result[
+            "_charts"
+        ] = {
+            "price_history": (
+                build_price_history(
+                    market_prices
+                )
+            ),
+        }
+
         progress(
             "market",
             "completed",
+            market_progress_result,
         )
 
         progress(
@@ -202,9 +237,33 @@ class ResearchCoordinator:
                 fundamental_metrics
             )
         )
+        fundamental_facts = (
+            self.fundamental_service
+            .get_cached_facts(
+                ticker=normalized_ticker
+            )
+        )
+
+        fundamental_progress_result = (
+            fundamental_analysis.model_dump(
+                mode="json"
+            )
+        )
+
+        fundamental_progress_result[
+            "_charts"
+        ] = {
+            "financial_history": (
+                build_financial_history(
+                    fundamental_facts
+                )
+            ),
+        }
+
         progress(
             "fundamentals",
             "completed",
+            fundamental_progress_result,
         )
 
         progress(
@@ -227,6 +286,7 @@ class ResearchCoordinator:
         progress(
             "valuation",
             "completed",
+            valuation_analysis,
         )
 
         progress(
@@ -263,9 +323,26 @@ class ResearchCoordinator:
                 risk_metrics
             )
         )
+        risk_progress_result = (
+            risk_analysis.model_dump(
+                mode="json"
+            )
+        )
+
+        risk_progress_result[
+            "_charts"
+        ] = {
+            "drawdown_history": (
+                build_drawdown_history(
+                    market_prices
+                )
+            ),
+        }
+
         progress(
             "risk",
             "completed",
+            risk_progress_result,
         )
 
         progress(
@@ -301,6 +378,7 @@ class ResearchCoordinator:
         progress(
             "news",
             "completed",
+            news_analysis,
         )
 
         parameters = ResearchParameters(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from threading import Lock
+from typing import Any
 from uuid import uuid4
 
 from financial_analyst.api.models import (
@@ -12,7 +13,6 @@ from financial_analyst.api.models import (
 from financial_analyst.committee.models import (
     CompanyInvestmentReport,
 )
-
 
 STEP_DEFINITIONS = [
     (
@@ -66,6 +66,11 @@ class ResearchJobRecord:
             for name, label
             in STEP_DEFINITIONS
         ]
+
+        self.partial_results: dict[
+            str,
+            Any,
+        ] = {}
 
         self.error: str | None = None
 
@@ -139,6 +144,7 @@ class ResearchJobStore:
         job_id: str,
         step_name: str,
         status: ResearchStepStatus,
+        result: Any | None = None,
     ) -> None:
         with self._lock:
             record = self._get_record(
@@ -175,10 +181,29 @@ class ResearchJobStore:
             elif (
                 status
                 == ResearchStepStatus.COMPLETED
-                and record.current_step
-                == step_name
             ):
-                record.current_step = None
+                if result is not None:
+                    if hasattr(
+                        result,
+                        "model_dump",
+                    ):
+                        serialized_result = (
+                            result.model_dump(
+                                mode="json"
+                            )
+                        )
+                    else:
+                        serialized_result = result
+
+                    record.partial_results[
+                        step_name
+                    ] = serialized_result
+
+                if (
+                    record.current_step
+                    == step_name
+                ):
+                    record.current_step = None
 
     def complete(
         self,
@@ -284,6 +309,10 @@ class ResearchJobStore:
                     for step
                     in record.steps
                 ],
+
+                partial_results=dict(
+                    record.partial_results
+                ),
 
                 error=record.error,
             )

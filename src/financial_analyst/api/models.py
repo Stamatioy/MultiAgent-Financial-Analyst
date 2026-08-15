@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from financial_analyst.committee.models import (
     CompanyInvestmentReport,
 )
-
+from typing import Any, Literal
 
 class StrictAPIModel(BaseModel):
     model_config = ConfigDict(
@@ -89,24 +89,41 @@ class ResearchJobCreated(StrictAPIModel):
     status: ResearchJobStatus
 
 
-class ResearchJobStatusResponse(StrictAPIModel):
-    job_id: str
+class ResearchJobStatusResponse(
+    StrictAPIModel
+):
+    job_id: str = Field(
+        min_length=1
+    )
 
-    ticker: str
+    ticker: str = Field(
+        min_length=1,
+        max_length=15,
+    )
 
     status: ResearchJobStatus
 
-    current_step: str | None
+    current_step: (
+        str | None
+    ) = None
 
     progress: float = Field(
         ge=0.0,
         le=1.0,
     )
 
-    steps: list[ResearchStep]
+    steps: list[
+        ResearchStep
+    ]
+
+    partial_results: dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
 
     error: str | None = None
-
 
 class ResearchJobResultResponse(StrictAPIModel):
     job_id: str

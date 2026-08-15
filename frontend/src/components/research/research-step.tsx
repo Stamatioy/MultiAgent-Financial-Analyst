@@ -1,5 +1,14 @@
+"use client";
+
+import {
+  ReactNode,
+  useState,
+} from "react";
+
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   Circle,
   LoaderCircle,
   X,
@@ -12,19 +21,38 @@ import {
 
 export function ResearchStep({
   step,
+  children,
 }: {
   step: ResearchStepType;
+  children?: ReactNode;
 }) {
+  const [
+    expanded,
+    setExpanded,
+  ] = useState(false);
+
+  const canExpand =
+    step.status === "completed"
+    && children !== undefined;
+
+
+  function toggle() {
+    if (!canExpand) {
+      return;
+    }
+
+    setExpanded(
+      (current) => !current
+    );
+  }
+
+
   return (
     <div
       className={`
-        flex
-        items-center
-        gap-4
+        overflow-hidden
         rounded-xl
         border
-        px-4
-        py-4
         transition-all
         ${
           step.status === "running"
@@ -37,40 +65,71 @@ export function ResearchStep({
         }
       `}
     >
-      <StepIcon
-        status={
-          step.status
-        }
-      />
+      <button
+        type="button"
+        disabled={!canExpand}
+        onClick={toggle}
+        className={`
+          flex
+          w-full
+          items-center
+          gap-4
+          px-4
+          py-4
+          text-left
+          transition
+          ${
+            canExpand
+              ? "cursor-pointer hover:bg-white/[0.03]"
+              : "cursor-default"
+          }
+        `}
+      >
+        <StepIcon
+          status={
+            step.status
+          }
+        />
 
-      <div className="flex-1">
-        <div
-          className={`
-            text-sm
-            font-medium
-            ${
+        <div className="flex-1">
+          <div
+            className={`
+              text-sm
+              font-medium
+              ${
+                step.status
+                === "waiting"
+                  ? "text-[var(--muted)]"
+                  : "text-white"
+              }
+            `}
+          >
+            {step.label}
+          </div>
+
+          <div className="mt-1 text-[11px] text-[var(--muted)]">
+            {statusLabel(
               step.status
-              === "waiting"
-                ? "text-[var(--muted)]"
-                : "text-white"
-            }
-          `}
-        >
-          {step.label}
+            )}
+          </div>
         </div>
 
-        <div
-          className="
-            mt-1
-            text-[11px]
-            text-[var(--muted)]
-          "
-        >
-          {statusLabel(
-            step.status,
-          )}
+        {canExpand && (
+          <div className="text-[var(--muted)]">
+            {expanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </div>
+        )}
+      </button>
+
+      {canExpand && expanded && (
+        <div className="border-t border-[var(--border-soft)] bg-black/10 px-5 py-5 lg:px-6 lg:py-6">
+          {children}
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -86,18 +145,7 @@ function StepIcon({
     status === "completed"
   ) {
     return (
-      <div
-        className="
-          flex
-          h-8
-          w-8
-          items-center
-          justify-center
-          rounded-full
-          bg-emerald-400/10
-          text-emerald-400
-        "
-      >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-400">
         <Check className="h-4 w-4" />
       </div>
     );
@@ -107,25 +155,8 @@ function StepIcon({
     status === "running"
   ) {
     return (
-      <div
-        className="
-          flex
-          h-8
-          w-8
-          items-center
-          justify-center
-          rounded-full
-          bg-emerald-400/10
-          text-emerald-400
-        "
-      >
-        <LoaderCircle
-          className="
-            h-4
-            w-4
-            animate-spin
-          "
-        />
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-400">
+        <LoaderCircle className="h-4 w-4 animate-spin" />
       </div>
     );
   }
@@ -134,37 +165,14 @@ function StepIcon({
     status === "failed"
   ) {
     return (
-      <div
-        className="
-          flex
-          h-8
-          w-8
-          items-center
-          justify-center
-          rounded-full
-          bg-red-400/10
-          text-red-400
-        "
-      >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-400/10 text-red-400">
         <X className="h-4 w-4" />
       </div>
     );
   }
 
   return (
-    <div
-      className="
-        flex
-        h-8
-        w-8
-        items-center
-        justify-center
-        rounded-full
-        border
-        border-[var(--border)]
-        text-[var(--muted)]
-      "
-    >
+    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)]">
       <Circle className="h-3 w-3" />
     </div>
   );
@@ -180,7 +188,7 @@ function statusLabel(
       return "Analyzing...";
 
     case "completed":
-      return "Complete";
+      return "Complete — click to view";
 
     case "failed":
       return "Failed";

@@ -213,25 +213,84 @@ export interface ResearchJobCreated {
 }
 
 
-export interface ResearchJobStatusResponse {
+export type ResearchJobStatusResponse = {
   job_id: string;
-
   ticker: string;
 
-  status: ResearchJobStatus;
+  status:
+    | "queued"
+    | "running"
+    | "completed"
+    | "failed";
 
-  current_step: string | null;
+  current_step:
+    | string
+    | null;
 
   progress: number;
 
   steps: ResearchStep[];
 
-  error: string | null;
-}
+  partial_results:
+    PartialResearchResults;
 
+  error:
+    | string
+    | null;
+};
 
 export interface ResearchJobResultResponse {
   job_id: string;
 
   report: CompanyInvestmentReport;
 }
+
+export type PartialResearchResults = {
+  market?: unknown;
+  fundamentals?: unknown;
+  valuation?: unknown;
+  risk?: unknown;
+  news?: unknown;
+  committee?: unknown;
+};
+
+export type PriceHistoryPoint = {
+  date: string;
+  close: number;
+  ma_50: number;
+  ma_200: number;
+};
+
+
+export type DrawdownPoint = {
+  date: string;
+  drawdown: number;
+};
+
+
+export type FinancialHistoryPoint = {
+  fiscal_year: number;
+
+  revenue:
+    | number
+    | null;
+
+  net_income:
+    | number
+    | null;
+
+  free_cash_flow:
+    | number
+    | null;
+};
+
+export type AgentPartialResult = {
+  analysis: unknown;
+
+  charts?: {
+    price_history?: PriceHistoryPoint[];
+    drawdown_history?: DrawdownPoint[];
+    financial_history?: FinancialHistoryPoint[];
+  };
+};
+

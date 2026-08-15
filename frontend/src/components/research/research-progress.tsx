@@ -28,6 +28,9 @@ import {
   ResearchStep,
 } from "./research-step";
 
+import {
+  AgentResult,
+} from "./agent-result";
 
 const POLL_INTERVAL_MS =
   750;
@@ -287,23 +290,28 @@ export function ResearchProgress({
         />
       </div>
 
-      <div
-        className="
-          mt-8
-          grid
-          gap-3
-          md:grid-cols-2
-        "
-      >
+      <div className="mt-8 flex flex-col gap-3">
         {job.steps.map(
-          (step) => (
-            <ResearchStep
-              key={
-                step.name
-              }
-              step={step}
-            />
-          ),
+            (step) => {
+                const result =
+                    job.partial_results?.[
+                        step.name as keyof typeof job.partial_results
+                    ];
+
+            return (
+                <ResearchStep
+                    key={step.name}
+                    step={step}
+                >
+                    {result !== undefined && (
+                        <AgentResult
+                          stepName={step.name}
+                          result={result}
+                        />
+                    )}
+                </ResearchStep>
+            );
+            },
         )}
       </div>
 

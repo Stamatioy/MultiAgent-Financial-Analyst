@@ -67,3 +67,45 @@ class MarketDataService:
             source=self.provider.name,
             metrics=metrics,
         )
+
+    def get_cached_prices(
+        self,
+        *,
+        ticker: str,
+        start_date: date,
+        end_date: date,
+    ):
+        normalized_ticker = (
+            normalize_ticker(
+                ticker
+            )
+        )
+
+        return (
+            self.repository.get_prices(
+                ticker=(
+                    normalized_ticker
+                ),
+                start_date=start_date,
+                end_date=end_date,
+            )
+        )
+
+    def get_prices(
+        self,
+        *,
+        ticker: str,
+        start_date: date,
+        end_date: date,
+    ):
+        normalized_ticker = (
+            normalize_ticker(
+                ticker
+            )
+        )
+
+        return self.repository.get_prices(
+            ticker=normalized_ticker,
+            start_date=start_date,
+            end_date=end_date,
+        )

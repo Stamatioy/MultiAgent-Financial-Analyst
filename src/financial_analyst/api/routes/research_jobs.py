@@ -29,7 +29,7 @@ from financial_analyst.sec.client import (
 from financial_analyst.validation.ticker import (
     normalize_ticker,
 )
-
+from typing import Any
 
 router = APIRouter(
     prefix="/api/research/jobs",
@@ -61,6 +61,7 @@ def run_research_job(
         def progress_callback(
             step: str,
             status: str,
+            result: Any | None = None,
         ) -> None:
             research_job_store.update_step(
                 job_id=job_id,
@@ -72,6 +73,8 @@ def run_research_job(
                         status
                     )
                 ),
+
+                result=result,
             )
 
         with SECClient() as sec_client:
