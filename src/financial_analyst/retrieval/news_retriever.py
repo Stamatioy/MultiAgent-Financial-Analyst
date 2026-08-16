@@ -50,21 +50,35 @@ class NewsRetriever:
             if ticker
             else None
         )
-
-        # Retrieve a larger candidate set because metadata
-        # filters are applied after vector search.
-        candidate_count = max(
-            limit * 10,
-            100,
-        )
-
-        candidate_count = min(
-            candidate_count,
-            self.vector_index.index.ntotal
-            if self.vector_index.index
+        if self.vector_index.index is None:
+            return []
+        # Metadata filtering happens after FAISS search.
+        #
+        # When filtering by ticker, search the full index so
+        # articles for that ticker cannot be excluded before
+        # the ticker filter is applied.
+        if (
+            normalized_ticker
+            and self.vector_index.index
             is not None
-            else candidate_count,
-        )
+        ):
+            candidate_count = (
+                self.vector_index.index.ntotal
+            )
+
+        else:
+            candidate_count = max(
+                limit * 10,
+                100,
+            )
+
+            candidate_count = min(
+                candidate_count,
+                self.vector_index.index.ntotal
+                if self.vector_index.index
+                is not None
+                else candidate_count,
+            )
 
         raw_results = (
             self.vector_index.search(
@@ -72,6 +86,29 @@ class NewsRetriever:
                 top_k=candidate_count,
             )
         )
+        matching_raw = [
+            (
+                metadata.article_id,
+                metadata.published_at,
+                score,
+            )
+            for metadata, score
+            in raw_results
+            if metadata.ticker
+            == normalized_ticker
+        ]
+
+        print(
+            f"[NEWS DEBUG] Raw FAISS results contain "
+            f"{len(matching_raw)} matches "
+            f"for {normalized_ticker}"
+        )
+
+        for item in matching_raw[:5]:
+            print(
+                "[NEWS DEBUG] Raw match:",
+                item,
+            )
 
         filtered: list[
             tuple[str, float]

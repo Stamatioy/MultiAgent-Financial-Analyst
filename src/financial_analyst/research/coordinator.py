@@ -26,6 +26,7 @@ from financial_analyst.retrieval.news_retriever import (
 )
 from financial_analyst.validation.ticker import (
     normalize_ticker,
+    validate_company_ticker,
 )
 from financial_analyst.agents.valuation_agent import (
     ValuationAnalystAgent,
@@ -46,7 +47,9 @@ from financial_analyst.visualization.chart_data import (
     build_financial_history,
     build_price_history,
 )
-
+from financial_analyst.news.service import (
+    NewsService,
+)
 ProgressCallback = Callable[
     [str, str, Any | None],
     None,
@@ -70,6 +73,7 @@ class ResearchCoordinator:
         risk_agent: RiskAnalystAgent,
         news_retriever: NewsRetriever,
         news_agent: NewsAnalystAgent,
+        news_service: NewsService,
     ) -> None:
         self.market_service = market_service
         self.market_agent = market_agent
@@ -84,7 +88,8 @@ class ResearchCoordinator:
 
         self.news_retriever = news_retriever
         self.news_agent = news_agent
-
+        self.news_service = news_service
+        
         self.valuation_service = valuation_service
         self.valuation_agent = valuation_agent
 
@@ -124,7 +129,7 @@ class ResearchCoordinator:
                     result,
                 )
         
-        normalized_ticker = normalize_ticker(
+        normalized_ticker = validate_company_ticker(
             ticker
         )
 
@@ -349,6 +354,7 @@ class ResearchCoordinator:
             "news",
             "running",
         )
+        ##
         retrieved_news = (
             self.news_retriever.retrieve(
                 query=query,
@@ -358,10 +364,98 @@ class ResearchCoordinator:
             )
         )
 
+
+        if not retrieved_news:
+            print(
+                f"[NEWS] No indexed articles found for "
+                f"{normalized_ticker}. Refreshing news..."
+            )
+
+            new_articles = (
+                self.news_service.refresh(
+                    ticker=normalized_ticker,
+                    limit=max(
+                        news_limit,
+                        20,
+                    ),
+                )
+            )
+            print(
+                f"[NEWS DEBUG] Refreshed "
+                f"{len(new_articles)} articles "
+                f"for {normalized_ticker}"
+            )
+
+            for article in new_articles:
+                print(
+                    "[NEWS DEBUG] Article:",
+                    article.ticker,
+                    article.published_at,
+                    article.title,
+                )
+
+            
+            if not new_articles:
+                raise RuntimeError(
+                    f"No relevant news articles could be "
+                    f"retrieved for {normalized_ticker}."
+                )
+
+            all_articles = (
+                self.news_service
+                .repository
+                .get_all_article_models()
+            )
+
+            nvda_articles = [
+                article
+                for article in all_articles
+                if article.ticker
+                == normalized_ticker
+            ]
+
+            print(
+                f"[NEWS DEBUG] Repository contains "
+                f"{len(nvda_articles)} articles "
+                f"for {normalized_ticker}"
+            )
+
+            self.news_retriever.vector_index.build(
+                all_articles
+            )
+            
+            self.news_retriever.vector_index.save()
+            indexed_tickers = [
+                metadata.ticker
+                for metadata
+                in self.news_retriever
+                .vector_index.metadata
+            ]
+
+            print(
+                f"[NEWS DEBUG] Index contains "
+                f"{indexed_tickers.count(normalized_ticker)} "
+                f"vectors for {normalized_ticker}"
+            )
+            print(
+                f"[NEWS] Rebuilt news index with "
+                f"{len(all_articles)} articles."
+            )
+
+            retrieved_news = (
+                self.news_retriever.retrieve(
+                    query=query,
+                    ticker=normalized_ticker,
+                    limit=news_limit,
+                    as_of=resolved_as_of,
+                )
+            )
+
+
         if not retrieved_news:
             raise RuntimeError(
-                "No relevant news articles were retrieved "
-                f"for {normalized_ticker}."
+                f"No relevant news articles were retrieved "
+                f"for {normalized_ticker} after refreshing."
             )
 
         articles = [

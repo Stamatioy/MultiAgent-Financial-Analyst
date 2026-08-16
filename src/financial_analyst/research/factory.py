@@ -62,6 +62,13 @@ from financial_analyst.agents.risk_agent import (
 from financial_analyst.risk.service import (
     RiskService,
 )
+from financial_analyst.news.service import (
+    NewsService,
+)
+from financial_analyst.news.yahoo_provider import (
+    YahooNewsProvider,
+)
+
 
 def build_research_coordinator(
     *,
@@ -80,6 +87,10 @@ def build_research_coordinator(
 
     news_repository = NewsRepository(
         connection
+    )
+    news_service = NewsService(
+        provider=YahooNewsProvider(),
+        repository=news_repository,
     )
 
     market_service = MarketDataService(
@@ -117,7 +128,21 @@ def build_research_coordinator(
         embedding_service=embedding_service
     )
 
-    vector_index.load()
+    try:
+        vector_index.load()
+
+    except FileNotFoundError:
+        articles = (
+            news_repository
+            .get_all_article_models()
+        )
+
+        if articles:
+            vector_index.build(
+                articles
+            )
+
+            vector_index.save()
 
     news_retriever = NewsRetriever(
         vector_index=vector_index,
@@ -143,5 +168,6 @@ def build_research_coordinator(
         valuation_agent=ValuationAnalystAgent(),
 
         news_retriever=news_retriever,
+        news_service=news_service,
         news_agent=NewsAnalystAgent(),
     )

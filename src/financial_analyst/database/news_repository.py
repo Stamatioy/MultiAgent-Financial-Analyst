@@ -29,13 +29,13 @@ class NewsRepository:
                 publisher VARCHAR,
                 url VARCHAR,
 
-                published_at TIMESTAMP,
+                published_at TIMESTAMPTZ,
                 source VARCHAR NOT NULL,
 
                 relevance_score DOUBLE NOT NULL,
 
-                fetched_at TIMESTAMP NOT NULL,
-                updated_at TIMESTAMP NOT NULL
+                fetched_at TIMESTAMPTZ NOT NULL,
+                updated_at TIMESTAMPTZ NOT NULL
                     DEFAULT CURRENT_TIMESTAMP
             )
             """

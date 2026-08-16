@@ -31,29 +31,71 @@ class MarketDataService:
         end_date: date,
         refresh: bool = True,
     ) -> MarketAnalysisResult:
-        normalized_ticker = normalize_ticker(ticker)
+        normalized_ticker = normalize_ticker(
+            ticker
+        )
 
         if start_date >= end_date:
-            raise ValueError("start_date must be before end_date.")
+            raise ValueError(
+                "start_date must be before end_date."
+            )
+
+        print(
+            f"[MARKET DEBUG] ticker={normalized_ticker}, "
+            f"refresh={refresh}, "
+            f"start={start_date}, "
+            f"end={end_date}"
+        )
 
         if refresh:
-            downloaded = self.provider.get_daily_prices(
+            print(
+                f"[MARKET DEBUG] Downloading "
+                f"{normalized_ticker} from provider..."
+            )
+
+            downloaded = (
+                self.provider.get_daily_prices(
+                    ticker=normalized_ticker,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            )
+
+            print(
+                f"[MARKET DEBUG] Downloaded "
+                f"{len(downloaded)} rows."
+            )
+
+            self.repository.upsert_prices(
+                downloaded
+            )
+
+            print(
+                f"[MARKET DEBUG] Saved "
+                f"{normalized_ticker} prices "
+                f"to repository."
+            )
+
+        # IMPORTANT:
+        # This must be OUTSIDE the `if refresh:` block.
+        stored_prices = (
+            self.repository.get_prices(
                 ticker=normalized_ticker,
                 start_date=start_date,
                 end_date=end_date,
             )
+        )
 
-            self.repository.upsert_prices(downloaded)
-
-        stored_prices = self.repository.get_prices(
-            ticker=normalized_ticker,
-            start_date=start_date,
-            end_date=end_date,
+        print(
+            f"[MARKET DEBUG] Cached rows "
+            f"after retrieval: "
+            f"{len(stored_prices)}"
         )
 
         if stored_prices.empty:
             raise RuntimeError(
-                f"No cached market data exists for {normalized_ticker}."
+                f"No cached market data exists "
+                f"for {normalized_ticker}."
             )
 
         metrics = calculate_market_metrics(
@@ -63,7 +105,9 @@ class MarketDataService:
 
         return MarketAnalysisResult(
             ticker=normalized_ticker,
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(
+                timezone.utc
+            ),
             source=self.provider.name,
             metrics=metrics,
         )

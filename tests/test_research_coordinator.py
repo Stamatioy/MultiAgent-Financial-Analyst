@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pandas as pd
 
 from datetime import (
     date,
@@ -118,6 +119,37 @@ class FakeMarketService:
             source="test",
             metrics=make_market_metrics(),
         )
+    def get_cached_prices(
+        self,
+        *,
+        ticker: str,
+        start_date,
+        end_date,
+    ):
+        return pd.DataFrame(
+            [
+                {
+                    "ticker": ticker,
+                    "trading_date": start_date,
+                    "open": 100.0,
+                    "high": 105.0,
+                    "low": 95.0,
+                    "close": 100.0,
+                    "adjusted_close": 100.0,
+                    "volume": 1_000_000,
+                },
+                {
+                    "ticker": ticker,
+                    "trading_date": end_date,
+                    "open": 110.0,
+                    "high": 115.0,
+                    "low": 105.0,
+                    "close": 110.0,
+                    "adjusted_close": 110.0,
+                    "volume": 1_100_000,
+                },
+            ]
+        )
 
 class FakeFundamentalService:
     def analyze(
@@ -126,6 +158,91 @@ class FakeFundamentalService:
     ) -> FundamentalMetrics:
         return make_fundamental_metrics()
 
+    def get_cached_facts(
+        self,
+        *,
+        ticker: str,
+    ):
+        return pd.DataFrame(
+            [
+                {
+                    "ticker": ticker,
+                    "concept": "Revenues",
+                    "fiscal_year": 2024,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2025-02-01",
+                    "period_start": "2024-01-01",
+                    "period_end": "2024-12-31",
+                    "value": 1000.0,
+                },
+                {
+                    "ticker": ticker,
+                    "concept": "Revenues",
+                    "fiscal_year": 2025,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2026-02-01",
+                    "period_start": "2025-01-01",
+                    "period_end": "2025-12-31",
+                    "value": 1200.0,
+                },
+                {
+                    "ticker": ticker,
+                    "concept": "NetIncomeLoss",
+                    "fiscal_year": 2024,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2025-02-01",
+                    "period_start": "2024-01-01",
+                    "period_end": "2024-12-31",
+                    "value": 100.0,
+                },
+                {
+                    "ticker": ticker,
+                    "concept": "NetIncomeLoss",
+                    "fiscal_year": 2025,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2026-02-01",
+                    "period_start": "2025-01-01",
+                    "period_end": "2025-12-31",
+                    "value": 150.0,
+                },
+                {
+                    "ticker": ticker,
+                    "concept": (
+                        "NetCashProvidedByUsedInOperatingActivities"
+                    ),
+                    "fiscal_year": 2025,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2026-02-01",
+                    "period_start": "2025-01-01",
+                    "period_end": "2025-12-31",
+                    "value": 300.0,
+                },
+                {
+                    "ticker": ticker,
+                    "concept": (
+                        "PaymentsToAcquirePropertyPlantAndEquipment"
+                    ),
+                    "fiscal_year": 2025,
+                    "fiscal_period": "FY",
+                    "form": "10-K",
+                    "unit": "USD",
+                    "filing_date": "2026-02-01",
+                    "period_start": "2025-01-01",
+                    "period_end": "2025-12-31",
+                    "value": 80.0,
+                },
+            ]
+        )
 class FakeMarketAgent:
     def analyze(
         self,
@@ -553,6 +670,7 @@ def test_research_coordinator_builds_bundle() -> None:
         risk_service=FakeRiskService(),
         risk_agent=FakeRiskAgent(),
         news_retriever=FakeNewsRetriever(),
+        news_service=FakeNewsService(),
         news_agent=FakeNewsAgent(),
     )
 
@@ -632,6 +750,7 @@ def test_coordinator_requires_news() -> None:
         risk_service=FakeRiskService(),
         risk_agent=FakeRiskAgent(),
         news_retriever=EmptyNewsRetriever(),
+        news_service=FakeNewsService(),
         news_agent=FakeNewsAgent(),
     )
 
@@ -653,3 +772,11 @@ def test_coordinator_requires_news() -> None:
             refresh_fundamentals=False,
         )
 
+class FakeNewsService:
+    def refresh(
+        self,
+        *,
+        ticker: str,
+        limit: int = 20,
+    ):
+        return []
