@@ -32,6 +32,10 @@ import {
   AgentResult,
 } from "./agent-result";
 
+import {
+  addToWatchlist,
+} from "@/lib/api";
+
 const POLL_INTERVAL_MS =
   750;
 
@@ -62,6 +66,52 @@ export function ResearchProgress({
     string | null
   >(null);
 
+  const [
+    addingToWatchlist,
+    setAddingToWatchlist,
+  ] = useState(false);
+
+  const [
+    addedToWatchlist,
+    setAddedToWatchlist,
+  ] = useState(false);
+
+  async function handleAddToWatchlist() {
+    if (
+      report === null
+      || addingToWatchlist
+      || addedToWatchlist
+    ) {
+      return;
+    }
+
+    try {
+      setAddingToWatchlist(
+        true
+      );
+
+      await addToWatchlist(
+        report.ticker
+      );
+
+      setAddedToWatchlist(
+        true
+      );
+
+    } catch (exception) {
+      setError(
+        exception
+          instanceof Error
+          ? exception.message
+          : "Unable to add ticker to watchlist.",
+      );
+
+    } finally {
+      setAddingToWatchlist(
+        false
+      );
+    }
+  }
 
   useEffect(
     () => {
@@ -316,9 +366,35 @@ export function ResearchProgress({
       </div>
 
       {report && (
-        <ResearchResultPreview
-          report={report}
-        />
+        <div className="space-y-4">
+          <ResearchResultPreview
+            report={report}
+          />
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={
+                handleAddToWatchlist
+              }
+              disabled={
+                addingToWatchlist
+                || addedToWatchlist
+              }
+              className={
+                addedToWatchlist
+                  ? "rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] px-6 py-3 text-sm font-medium text-emerald-300"
+                  : "rounded-xl border border-[var(--border)] bg-white/[0.02] px-6 py-3 text-sm font-medium text-white transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+              }
+            >
+              {addedToWatchlist
+                ? `${report.ticker} added to Watchlist`
+                : addingToWatchlist
+                  ? "Adding..."
+                  : `Add ${report.ticker} to Watchlist`}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

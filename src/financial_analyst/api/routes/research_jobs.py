@@ -31,6 +31,10 @@ from financial_analyst.validation.ticker import (
 )
 from typing import Any
 
+from financial_analyst.database.research_history_repository import (
+    ResearchHistoryRepository,
+)
+
 router = APIRouter(
     prefix="/api/research/jobs",
     tags=["research-jobs"],
@@ -128,6 +132,16 @@ def run_research_job(
                     progress_callback
                 ),
             )
+
+        history_repository = (
+            ResearchHistoryRepository(
+                connection
+            )
+        )
+
+        history_repository.save(
+            report
+        )
 
         research_job_store.complete(
             job_id=job_id,

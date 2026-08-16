@@ -29,7 +29,13 @@ import {
   PriceHistoryChart,
 } from "@/components/charts/price-history-chart";
 
+import {
+  addToWatchlist,
+} from "@/lib/api";
 
+import {
+  useState,
+} from "react";
 
 type AgentResultProps = {
   stepName: string;

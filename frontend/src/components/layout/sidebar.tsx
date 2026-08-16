@@ -28,7 +28,7 @@ const navigation = [
   },
   {
     label: "Watchlist",
-    href: "#",
+    href: "/watchlist",
     icon: Star,
   },
   {
@@ -42,7 +42,7 @@ const navigation = [
 const systemNavigation = [
   {
     label: "Agents",
-    href: "#",
+    href: "/agents",
     icon: Bot,
   },
   {

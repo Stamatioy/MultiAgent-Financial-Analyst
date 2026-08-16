@@ -21,6 +21,9 @@ from financial_analyst.sec.client import (
     SECClient,
 )
 
+from financial_analyst.database.research_history_repository import (
+    ResearchHistoryRepository,
+)
 
 router = APIRouter(
     prefix="/api/research",
@@ -83,7 +86,15 @@ def research_company(
                     request.refresh_fundamentals
                 ),
             )
+            history_repository = (
+                ResearchHistoryRepository(
+                    connection
+                )
+            )
 
+            history_repository.save(
+                report
+            )
         return ResearchResponse(
             report=report
         )

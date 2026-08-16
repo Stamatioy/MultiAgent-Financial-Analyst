@@ -129,3 +129,91 @@ class ResearchJobResultResponse(StrictAPIModel):
     job_id: str
 
     report: CompanyInvestmentReport
+
+class ResearchHistoryItem(
+    StrictAPIModel
+):
+    research_id: str
+
+    ticker: str
+
+    generated_at: datetime
+
+    recommendation: str
+
+    conviction: str
+
+    confidence_score: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    investment_horizon: str
+
+
+class ResearchHistoryResponse(
+    StrictAPIModel
+):
+    items: list[
+        ResearchHistoryItem
+    ]
+
+
+class ResearchHistoryReportResponse(
+    StrictAPIModel
+):
+    research_id: str
+
+    report: CompanyInvestmentReport
+
+class WatchlistAddRequest(
+    StrictAPIModel
+):
+    ticker: str = Field(
+        min_length=1,
+        max_length=15,
+    )
+
+
+class WatchlistItem(
+    StrictAPIModel
+):
+    ticker: str
+
+    added_at: datetime
+
+    research_id: (
+        str | None
+    ) = None
+
+    last_researched_at: (
+        datetime | None
+    ) = None
+
+    recommendation: (
+        str | None
+    ) = None
+
+    conviction: (
+        str | None
+    ) = None
+
+    confidence_score: (
+        float | None
+    ) = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    investment_horizon: (
+        str | None
+    ) = None
+
+
+class WatchlistResponse(
+    StrictAPIModel
+):
+    items: list[
+        WatchlistItem
+    ]

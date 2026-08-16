@@ -6,7 +6,15 @@ import {
   ResearchResponse,
 } from "@/lib/types";
 
+import type {
+  ResearchHistoryReportResponse,
+  ResearchHistoryResponse,
+} from "@/lib/types";
 
+import type {
+  WatchlistItem,
+  WatchlistResponse,
+} from "@/lib/types";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
@@ -161,4 +169,127 @@ async function getErrorMessage(
   }
 
   return fallback;
+}
+
+export async function getResearchHistory():
+  Promise<ResearchHistoryResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/api/history`,
+      {
+        cache: "no-store",
+      },
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Failed to load research history.",
+      ),
+    );
+  }
+
+  return response.json();
+}
+
+
+export async function getHistoricalReport(
+  researchId: string,
+): Promise<ResearchHistoryReportResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/api/history/${researchId}`,
+      {
+        cache: "no-store",
+      },
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Failed to load research report.",
+      ),
+    );
+  }
+
+  return response.json();
+}
+
+export async function getWatchlist():
+  Promise<WatchlistResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/api/watchlist`,
+      {
+        cache: "no-store",
+      },
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Failed to load watchlist.",
+      ),
+    );
+  }
+
+  return response.json();
+}
+
+
+export async function addToWatchlist(
+  ticker: string,
+) {
+  const response = await fetch(
+    `${API_URL}/api/watchlist`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        ticker,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Failed to add ticker to watchlist.",
+      ),
+    );
+  }
+
+  return response.json();
+}
+
+
+export async function removeFromWatchlist(
+  ticker: string,
+): Promise<void> {
+  const response =
+    await fetch(
+      `${API_URL}/api/watchlist/${encodeURIComponent(
+        ticker
+      )}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Failed to remove ticker.",
+      ),
+    );
+  }
 }

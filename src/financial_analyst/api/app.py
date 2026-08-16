@@ -14,6 +14,12 @@ from financial_analyst.api.routes.research import (
 from financial_analyst.api.routes.research_jobs import (
     router as research_jobs_router,
 )
+from financial_analyst.api.routes.history import (
+    router as history_router,
+)
+from financial_analyst.api.routes.watchlist import (
+    router as watchlist_router,
+)
 
 app = FastAPI(
     title="Multi-Agent Financial Analyst API",
@@ -51,6 +57,12 @@ app.include_router(
     research_router
 )
 
+app.include_router(
+    history_router
+)
+app.include_router(
+    watchlist_router
+)
 
 @app.get("/")
 def root() -> dict[str, str]:

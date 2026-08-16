@@ -300,3 +300,71 @@ export type NewsSource = {
   publisher: string | null;
   url: string | null;
 };
+
+export interface ResearchHistoryItem {
+  research_id: string;
+
+  ticker: string;
+
+  generated_at: string;
+
+  recommendation:
+    InvestmentRecommendation;
+
+  conviction:
+    ConvictionLevel;
+
+  confidence_score: number;
+
+  investment_horizon:
+    InvestmentHorizon;
+}
+
+
+export interface ResearchHistoryResponse {
+  items:
+    ResearchHistoryItem[];
+}
+
+
+export interface ResearchHistoryReportResponse {
+  research_id: string;
+
+  report:
+    CompanyInvestmentReport;
+}
+
+export interface WatchlistItem {
+  ticker: string;
+
+  added_at: string;
+
+  research_id:
+    | string
+    | null;
+
+  last_researched_at:
+    | string
+    | null;
+
+  recommendation:
+    | InvestmentRecommendation
+    | null;
+
+  conviction:
+    | ConvictionLevel
+    | null;
+
+  confidence_score:
+    | number
+    | null;
+
+  investment_horizon:
+    | InvestmentHorizon
+    | null;
+}
+
+
+export interface WatchlistResponse {
+  items: WatchlistItem[];
+}
