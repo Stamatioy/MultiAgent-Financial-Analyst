@@ -4,6 +4,7 @@ import {
   Database,
   Newspaper,
   ShieldAlert,
+  Scale,
 } from "lucide-react";
 
 import {
@@ -40,6 +41,15 @@ const agents = [
 
     icon:
       Database,
+  },
+
+  {
+    title: "Valuation Analysis",
+    description:
+      "Evaluates whether the market price implies demanding, balanced or attractive expectations.",
+
+    icon:
+      Scale,
   },
 
   {
@@ -126,7 +136,7 @@ export default function Home() {
             grid
             gap-4
             md:grid-cols-2
-            xl:grid-cols-5
+            xl:grid-cols-6
           "
         >
           {agents.map(

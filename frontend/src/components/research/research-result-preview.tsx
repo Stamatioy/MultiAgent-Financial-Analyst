@@ -158,21 +158,16 @@ export function ResearchResultPreview({
           text-emerald-400
         "
       >
-        Full research dashboard
+        
 
-        <ArrowUpRight
-          className="
-            h-3.5
-            w-3.5
-          "
-        />
+        
 
         <span
           className="
             text-[var(--muted)]
           "
         >
-          coming in Milestone 18
+          
         </span>
       </div>
     </div>
