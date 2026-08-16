@@ -36,6 +36,8 @@ import {
   addToWatchlist,
 } from "@/lib/api";
 
+import Link from "next/link";
+
 const POLL_INTERVAL_MS =
   750;
 
@@ -332,6 +334,7 @@ export function ResearchProgress({
             bg-emerald-400
             transition-all
             duration-500
+            ease-out
           "
           style={{
             width:
@@ -500,6 +503,12 @@ function ResearchError({
           >
             {message}
           </p>
+          <Link
+            href="/"
+            className="mt-4 inline-flex rounded-lg border border-red-400/20 px-3 py-2 text-xs font-medium text-red-200 transition hover:bg-red-400/[0.06]"
+          >
+            Start New Research
+          </Link>
         </div>
       </div>
     </div>

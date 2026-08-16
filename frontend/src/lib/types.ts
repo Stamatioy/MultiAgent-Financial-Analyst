@@ -368,3 +368,16 @@ export interface WatchlistItem {
 export interface WatchlistResponse {
   items: WatchlistItem[];
 }
+
+export interface SystemStatusResponse {
+  api: {
+    online: boolean;
+  };
+
+  llm: {
+    online: boolean;
+    model: string;
+    runtime: string;
+    local: boolean;
+  };
+}

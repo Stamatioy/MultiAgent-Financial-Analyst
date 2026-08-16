@@ -96,3 +96,77 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: #354458;
 }
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-150%);
+  }
+
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+
+@keyframes subtle-glow {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+.animate-fade-in-up {
+  animation:
+    fade-in-up
+    300ms
+    ease-out
+    both;
+}
+
+
+.loading-bar {
+  animation:
+    loading-slide
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+
+.animate-subtle-glow {
+  animation:
+    subtle-glow
+    2s
+    ease-in-out
+    infinite;
+}
+
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .animate-fade-in-up,
+  .loading-bar,
+  .animate-subtle-glow {
+    animation: none;
+  }
+}

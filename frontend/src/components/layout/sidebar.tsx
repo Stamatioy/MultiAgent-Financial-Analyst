@@ -14,6 +14,9 @@ import {
 
 import { usePathname } from "next/navigation";
 
+import {
+  LocalModelStatus,
+} from "@/components/system/local-model-status";
 
 const navigation = [
   {
@@ -252,79 +255,7 @@ export function Sidebar() {
           p-4
         "
       >
-        <div
-          className="
-            rounded-xl
-            border
-            border-[var(--border)]
-            bg-[var(--surface)]
-            p-4
-          "
-        >
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-            "
-          >
-            <div
-              className="
-                relative
-                flex
-                h-8
-                w-8
-                items-center
-                justify-center
-                rounded-lg
-                bg-white/[0.05]
-              "
-            >
-              <Cpu
-                className="
-                  h-4
-                  w-4
-                  text-[var(--muted-light)]
-                "
-              />
-
-              <span
-                className="
-                  absolute
-                  -right-1
-                  -top-1
-                  h-2.5
-                  w-2.5
-                  rounded-full
-                  border-2
-                  border-[#0e131b]
-                  bg-emerald-400
-                "
-              />
-            </div>
-
-            <div>
-              <div
-                className="
-                  text-xs
-                  font-medium
-                  text-white
-                "
-              >
-                Qwen3-8B
-              </div>
-
-              <div
-                className="
-                  text-[11px]
-                  text-[var(--muted)]
-                "
-              >
-                Local inference
-              </div>
-            </div>
-          </div>
-        </div>
+        <LocalModelStatus />
       </div>
     </aside>
   );

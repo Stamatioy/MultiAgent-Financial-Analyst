@@ -20,6 +20,9 @@ from financial_analyst.api.routes.history import (
 from financial_analyst.api.routes.watchlist import (
     router as watchlist_router,
 )
+from financial_analyst.api.routes.system import (
+    router as system_router,
+)
 
 app = FastAPI(
     title="Multi-Agent Financial Analyst API",
@@ -62,6 +65,9 @@ app.include_router(
 )
 app.include_router(
     watchlist_router
+)
+app.include_router(
+    system_router
 )
 
 @app.get("/")

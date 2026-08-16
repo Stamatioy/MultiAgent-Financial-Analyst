@@ -24,6 +24,7 @@ export function ResearchResultPreview({
     <div
       className="
         mt-7
+        animate-fade-in-up
         rounded-2xl
         border
         border-emerald-400/20

@@ -103,10 +103,10 @@ export function ResearchForm() {
             newsLimit,
 
           refresh_market:
-            false,
+            true,
 
           refresh_fundamentals:
-            false,
+            true,
         });
 
       router.push(

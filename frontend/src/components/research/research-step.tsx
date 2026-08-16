@@ -56,7 +56,7 @@ export function ResearchStep({
         transition-all
         ${
           step.status === "running"
-            ? "border-emerald-400/30 bg-emerald-400/[0.04]"
+            ? "animate-subtle-glow border-emerald-400/30 bg-emerald-400/[0.04]"
             : step.status === "completed"
               ? "border-[var(--border)] bg-white/[0.015]"
               : step.status === "failed"
@@ -126,7 +126,7 @@ export function ResearchStep({
       </button>
 
       {canExpand && expanded && (
-        <div className="border-t border-[var(--border-soft)] bg-black/10 px-5 py-5 lg:px-6 lg:py-6">
+        <div className="animate-fade-in-up border-t border-[var(--border-soft)] bg-black/10 px-5 py-5 lg:px-6 lg:py-6">
           {children}
         </div>
       )}

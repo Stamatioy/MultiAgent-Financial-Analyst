@@ -16,6 +16,10 @@ import type {
   WatchlistResponse,
 } from "@/lib/types";
 
+import type {
+  SystemStatusResponse,
+} from "@/lib/types";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://127.0.0.1:8000";
@@ -292,4 +296,23 @@ export async function removeFromWatchlist(
       ),
     );
   }
+}
+
+export async function getSystemStatus():
+  Promise<SystemStatusResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/api/system/status`,
+      {
+        cache: "no-store",
+      },
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to retrieve system status."
+    );
+  }
+
+  return response.json();
 }
